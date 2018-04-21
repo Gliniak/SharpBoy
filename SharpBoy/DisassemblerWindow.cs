@@ -122,6 +122,9 @@ namespace SharpBoy
 
             int itemIndex = GetItemIndexWithAddress(address);
 
+            if (itemIndex == -1)
+                return;
+
             ListViewItem item = lv_dissassembly.Items[itemIndex];
             item.Selected = true;
             item.Focused = true;

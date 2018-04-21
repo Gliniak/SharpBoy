@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using OpenTK;
+using OpenTK.Graphics.OpenGL4;
+
 namespace SharpBoy
 {
     public partial class MainWindow : Form
@@ -48,6 +51,8 @@ namespace SharpBoy
 
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Reading File: " + opener.FileName);
             Program.emulator.LoadCartridge(opener.FileName);
+
+
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)

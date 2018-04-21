@@ -12,7 +12,6 @@ namespace SharpBoy.Emulator
         private Memory memory = new Memory();
 
         private Cartridge cart = new Cartridge();
-        
 
         public emulator()
         {
