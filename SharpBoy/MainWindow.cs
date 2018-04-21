@@ -53,6 +53,7 @@ namespace SharpBoy
                 return;
 
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Reading File: " + opener.FileName);
+
             Program.emulator.LoadCartridge(opener.FileName);
 
             Text = Program.emulator.GetCartridge().GetGameTitle();
@@ -88,7 +89,8 @@ namespace SharpBoy
 
         private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Program.emulator.Start();
+            Program.emulatorThread = new System.Threading.Thread(() => Program.emulator.Start());
+            Program.emulatorThread.Start();
         }
 
         private void MainWindow_Load(object sender, EventArgs e)

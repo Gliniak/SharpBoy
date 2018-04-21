@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpBoy.Emulator
+namespace SharpBoy
 {
     class Opcodes
     {
@@ -225,7 +225,7 @@ namespace SharpBoy.Emulator
             Program.emulator.getCPU().set_reg_a(Convert.ToByte(reg_a ^ reg_a));
 
             if (Program.emulator.getCPU().get_reg_a() == 0)
-                Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+                Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
 
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(Program.emulator.getCPU().get_reg_pc() + 1));
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "XOR_A INSTRUCTION EXECUTED");
@@ -286,8 +286,8 @@ namespace SharpBoy.Emulator
 
             Byte value = (Byte)(Program.emulator.getCPU().get_reg_b() - 1);
 
-            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
-            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
             Program.emulator.getCPU().set_reg_b(value);
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
@@ -301,8 +301,8 @@ namespace SharpBoy.Emulator
             Byte value = (Byte)(Program.emulator.getCPU().get_reg_c() - 1);
 
             // TODO: NEED TO ADD CARRY FLAG
-            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
-            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
             Program.emulator.getCPU().set_reg_c(value);
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));

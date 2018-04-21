@@ -4,16 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SharpBoy.Emulator
+namespace SharpBoy
 {
-    class emulator
+    class Emulator
     {
         private CPU cpu = new CPU();
         private Memory memory = new Memory();
 
         private Cartridge cart = new Cartridge();
 
-        public emulator()
+        public Emulator()
         {
             Initialize();
         } 

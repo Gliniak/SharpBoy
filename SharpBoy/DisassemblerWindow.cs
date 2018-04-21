@@ -37,10 +37,10 @@ namespace SharpBoy
             tb_reg_h.Text = String.Format("{0:X2}", Program.emulator.getCPU().get_reg_h());
             tb_reg_l.Text = String.Format("{0:X2}", Program.emulator.getCPU().get_reg_l());
 
-            cb_zero_flag.Checked = Program.emulator.getCPU().GetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO);
-            cb_substract_flag.Checked = Program.emulator.getCPU().GetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT);
-            cb_half_carry_flag.Checked = Program.emulator.getCPU().GetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY);
-            cb_carry_flag.Checked = Program.emulator.getCPU().GetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY);
+            cb_zero_flag.Checked = Program.emulator.getCPU().GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO);
+            cb_substract_flag.Checked = Program.emulator.getCPU().GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT);
+            cb_half_carry_flag.Checked = Program.emulator.getCPU().GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY);
+            cb_carry_flag.Checked = Program.emulator.getCPU().GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY);
 
             tb_goto_address.Text = tb_reg_pc_dis.Text;
         }
@@ -61,7 +61,7 @@ namespace SharpBoy
 
                 ListViewItem item = new ListViewItem(address);
                 item.SubItems.Add(value);
-                item.SubItems.Add(Emulator.Opcodes.GetOpcode((Emulator.Opcodes.Opcode)opcode, ref i));
+                item.SubItems.Add(Opcodes.GetOpcode((Opcodes.Opcode)opcode, ref i));
                 lv_dissassembly.Items.Add(item);
             }
 

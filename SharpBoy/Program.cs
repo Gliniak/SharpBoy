@@ -9,8 +9,10 @@ namespace SharpBoy
 {
     static class Program
     {
-        public static Emulator.emulator emulator;
+        public static Emulator emulator = new Emulator();
         public static LoggerWindow loggerW;
+
+        public static Thread emulatorThread;
         /// <summary>
         /// Główny punkt wejścia dla aplikacji.
         /// </summary>
@@ -22,9 +24,6 @@ namespace SharpBoy
 
             Thread loggerThread = new Thread(() => Application.Run(loggerW = new LoggerWindow()));
             loggerThread.Start();
-
-            Thread emulatorThread = new Thread(() => emulator = new Emulator.emulator());
-            emulatorThread.Start();
 
             Application.Run(new MainWindow());
         }
