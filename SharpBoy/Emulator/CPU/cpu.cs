@@ -20,9 +20,9 @@ namespace SharpBoy.Emulator
         // 8 bit registers
         // based on GBCPUman
         Byte reg_a = 0x01;
-        Byte reg_b;
+        Byte reg_b = 0x00;
         Byte reg_c = 0x13;
-        Byte reg_d;
+        Byte reg_d = 0x00;
         Byte reg_e = 0xD8;
         Byte reg_f = 0xB0; // Flags register
         Byte reg_h = 0x01;

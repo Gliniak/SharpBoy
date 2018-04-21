@@ -45,5 +45,7 @@ namespace SharpBoy.Emulator
 
         public Memory GetMemory() { return memory; }
         public CPU getCPU() { return cpu; }
+
+        public Cartridge GetCartridge() { return cart; }
     }
 }

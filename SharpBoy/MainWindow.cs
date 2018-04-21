@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using OpenTK;
-using OpenTK.Graphics.OpenGL4;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 
 namespace SharpBoy
 {
     public partial class MainWindow : Form
     {
+        OpenGLWindow openGLWindow;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -52,7 +55,18 @@ namespace SharpBoy
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Reading File: " + opener.FileName);
             Program.emulator.LoadCartridge(opener.FileName);
 
+            Text = Program.emulator.GetCartridge().GetGameTitle();
 
+            openGLWindow = new OpenGLWindow();
+
+            openGLWindow.Location = new Point(5, 5);
+            openGLWindow.Size = new Size(640, 480);
+            openGLWindow.BackColor = Color.Black;
+            openGLWindow.TabIndex = 0;
+            // PROBLEM HERE?
+            Controls.Add(openGLWindow);
+            openGLWindow.Show();
+            ((GLControl)openGLWindow.Controls[0]).Invalidate();
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
@@ -75,6 +89,21 @@ namespace SharpBoy
         private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Program.emulator.Start();
+        }
+
+        private void MainWindow_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void MainWindow_Resize(object sender, EventArgs e)
+        {
+            if (openGLWindow == null)
+                return;
+
+            openGLWindow.PerformAutoScale();
+            ((GLControl)openGLWindow.Controls[0]).Invalidate();
+            ((GLControl)openGLWindow.Controls[0]).Update();
         }
     }
 }
