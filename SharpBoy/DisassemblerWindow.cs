@@ -23,7 +23,6 @@ namespace SharpBoy
             tb_reg_pc_dis.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_pc());
             tb_reg_sp.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_sp());
 
-
             tb_reg_af.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_af());
             tb_reg_bc.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_bc());
             tb_reg_de.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_de());
@@ -124,6 +123,8 @@ namespace SharpBoy
 
             if (itemIndex == -1)
                 return;
+
+            lv_dissassembly.SelectedItems.Clear();
 
             ListViewItem item = lv_dissassembly.Items[itemIndex];
             item.Selected = true;

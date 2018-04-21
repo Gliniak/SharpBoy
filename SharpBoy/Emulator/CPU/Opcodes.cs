@@ -240,7 +240,7 @@ namespace SharpBoy.Emulator
         {
             UInt16 address = Program.emulator.getCPU().get_reg_pc();
 
-            Program.emulator.getCPU().set_reg_l((Byte)((SByte)(Program.emulator.getCPU().get_reg_a() - 1)));
+            Program.emulator.getCPU().set_reg_l((Byte)(Program.emulator.getCPU().get_reg_a() - 1));
 
             Program.emulator.getCPU().set_reg_hl(Convert.ToUInt16(Program.emulator.getCPU().get_reg_a()));
             Program.emulator.getCPU().set_reg_hl((UInt16)Convert.ToInt16(Program.emulator.getCPU().get_reg_hl() - 1));
@@ -253,15 +253,12 @@ namespace SharpBoy.Emulator
         {
             UInt16 address = Program.emulator.getCPU().get_reg_pc();
 
-            SByte value = Convert.ToSByte(Program.emulator.getCPU().get_reg_b() - 1);
+            Byte value = (Byte)(Program.emulator.getCPU().get_reg_b() - 1);
 
-            // TODO: NEED TO ADD CARRY FLAG
-            if(value == 0)
-                Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
-
+            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
             Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
-            Program.emulator.getCPU().set_reg_b((Byte)value);
+            Program.emulator.getCPU().set_reg_b(value);
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC B INSTRUCTION EXECUTED");
         }
@@ -270,16 +267,13 @@ namespace SharpBoy.Emulator
         {
             UInt16 address = Program.emulator.getCPU().get_reg_pc();
 
-            SByte value = Convert.ToSByte(Program.emulator.getCPU().get_reg_c() - 1);
+            Byte value = (Byte)(Program.emulator.getCPU().get_reg_c() - 1);
 
             // TODO: NEED TO ADD CARRY FLAG
-            if (value == 0)
-                Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
-
+            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
             Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
-
-            Program.emulator.getCPU().set_reg_c((Byte)value);
+            Program.emulator.getCPU().set_reg_c(value);
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC C INSTRUCTION EXECUTED");
         }
@@ -318,8 +312,7 @@ namespace SharpBoy.Emulator
                     val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
                     val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
 
-                    val3 = Convert.ToUInt16((val1 << 8) + val2);
-                    str_op += String.Format("{0:X4}", val3) + "h";
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "h";
                     address += 3;
                     break;
 
@@ -334,8 +327,7 @@ namespace SharpBoy.Emulator
                     val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
                     val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
 
-                    val3 = Convert.ToUInt16(((Byte)val1 << 8) + val2);
-                    str_op += String.Format("{0:X4}", val3) + "h";
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "h";
                     address += 3;
                     break;
 
