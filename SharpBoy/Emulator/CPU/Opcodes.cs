@@ -35,7 +35,9 @@ namespace SharpBoy.Emulator
             OPCODE_LDH_N_A = 0xE0, // LOAD A to $FF00+n
             OPCODE_LHD_A_N = 0xF0, // LOAD $FF00+n to A
 
-            OPCODE_CP_n = 0xFE
+            OPCODE_CP_n = 0xFE,
+            OPCODE_LD_nn_A = 0xEA, // LOAD [$xxxx], nn
+            OPCODE_LD_SP_nn = 0x31, // LOAD SP, nn (SP <- nn)
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -56,7 +58,9 @@ namespace SharpBoy.Emulator
             { Opcode.OPCODE_LHD_A_N, () => ldh_a_n_ins() },
             { Opcode.OPCODE_RRCA, () => rrca_ins() },
             { Opcode.OPCODE_CP_n, () => cp_n_ins() },
-            { Opcode.OPCODE_LD_HL_n, () => ld_hl_n() }
+            { Opcode.OPCODE_LD_HL_n, () => ld_hl_n() },
+            { Opcode.OPCODE_LD_nn_A, () => ld_nn_a() },
+            { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn() }
         };
 
         public static void unimplemented_ins()
@@ -65,6 +69,33 @@ namespace SharpBoy.Emulator
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
             return;
         }
+
+        public static void ld_sp_nn()
+        {
+            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+
+            UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+
+            Program.emulator.getCPU().set_reg_sp(value);
+            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
+        }
+
+        public static void ld_nn_a()
+        {
+            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+
+            UInt16 newAddress = Convert.ToUInt16((hi << 8) + lo);
+
+            Program.emulator.GetMemory().WriteToMemory(newAddress, Program.emulator.getCPU().get_reg_a());
+            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
+        }
+
 
         public static void ld_hl_n()
         {
@@ -405,6 +436,26 @@ namespace SharpBoy.Emulator
                     str_op = "LD HL, ";
                     str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1))) + "h";
                     address += 2;
+                    break;
+
+                case Opcode.OPCODE_LD_nn_A:
+                    str_op = "LD [$";
+
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "], A";
+                    address += 3;
+                    break;
+
+                case Opcode.OPCODE_LD_SP_nn:
+                    str_op = "LD SP, ";
+
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    address += 3;
                     break;
                 default:
                     str_op = "UNKNOWN";

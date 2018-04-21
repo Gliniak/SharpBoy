@@ -50,13 +50,6 @@ namespace SharpBoy.Emulator
             return;
         }
 
-        /*
-        public void WriteToMemory(UInt16 Address, UInt16 Offset, Byte Value)
-        {
-            BaseMemory[Address+Offset] = Value;
-            return;
-        }
-        */
         public void WriteToMemory(UInt16 Address, Byte[] Values, UInt16 count)
         {
             for(UInt16 i = 0; i < count; i++)
