@@ -245,6 +245,11 @@ namespace SharpBoy.Emulator
 
             SByte value = Convert.ToSByte(Program.emulator.getCPU().get_reg_b() - 1);
 
+            if(value == 0)
+                Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            Program.emulator.getCPU().SetFlagBit(Emulator.CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
             Program.emulator.getCPU().set_reg_b((Byte)value);
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
         }

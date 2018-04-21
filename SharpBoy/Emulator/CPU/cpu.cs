@@ -19,14 +19,14 @@ namespace SharpBoy.Emulator
 
         // 8 bit registers
         // based on GBCPUman
-        Byte reg_a;
+        Byte reg_a = 0x01;
         Byte reg_b;
-        Byte reg_c;
+        Byte reg_c = 0x13;
         Byte reg_d;
-        Byte reg_e;
-        Byte reg_f; // Flags register
-        Byte reg_h;
-        Byte reg_l;
+        Byte reg_e = 0xD8;
+        Byte reg_f = 0xB0; // Flags register
+        Byte reg_h = 0x01;
+        Byte reg_l = 0x4D;
 
         // 16 bit registers
         UInt16 reg_sp = 0xFFFE;
@@ -34,6 +34,7 @@ namespace SharpBoy.Emulator
 
         // Special Paired Registers
         // AF, BC, DE, HL
+        // TODO: NOT REQUIRED! REMOVE SOON
         UInt16 reg_af;
         UInt16 reg_bc;
         UInt16 reg_de;
@@ -76,6 +77,7 @@ namespace SharpBoy.Emulator
 
 
         // 16 bit registers access
+        // FIX THIS!
         public void set_reg_hl(UInt16 value) { reg_hl = value; }
         public UInt16 get_reg_hl() { return reg_hl; }
 
