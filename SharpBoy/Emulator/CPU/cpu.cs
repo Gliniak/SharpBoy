@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpBoy
 {
     class CPU
     {
+        private readonly double CPU_CLOCK = 1/(4.194304 * 1000000);
+        private double CPU_CLOCK_MULTIPLY = 10.0;
+
+        private Boolean FAST_CLOCK = true;
+
         public enum Flag_Register_Bits : Byte
         {
             FLAG_REGISTER_ZERO = 0x07,
@@ -113,7 +120,18 @@ namespace SharpBoy
 
         public void exe_ins()
         {
-            Opcodes.ExecuteOpcode((Opcodes.Opcode)Program.emulator.GetMemory().ReadFromMemory(reg_pc));
+            Byte op = Program.emulator.GetMemory().ReadFromMemory(reg_pc);
+
+            if (!Enum.IsDefined(typeof(Opcodes.Opcode), op))
+            {
+                Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "UNKNOWN OPCODE OCCURED: " + String.Format("{0:X2}", op)
+                    + " At Address: " + String.Format("{0:X4}", reg_pc));
+
+                set_reg_pc((UInt16)(get_reg_pc() + 1));
+                return;
+            }
+
+            Opcodes.ExecuteOpcode((Opcodes.Opcode)op);
         }
 
         public void Start()
@@ -122,6 +140,11 @@ namespace SharpBoy
             {
                 exe_ins();
             } while (true);
+            
+            // Need to implement fast timer!
+            //Stopwatch timer = new Stopwatch();
+
+
         }
     }
 }
