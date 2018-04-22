@@ -39,6 +39,7 @@
             this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.disassemblerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.memoryViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -108,7 +109,8 @@
             // debugToolStripMenuItem
             // 
             this.debugToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.disassemblerToolStripMenuItem});
+            this.disassemblerToolStripMenuItem,
+            this.memoryViewerToolStripMenuItem});
             this.debugToolStripMenuItem.Name = "debugToolStripMenuItem";
             this.debugToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.debugToolStripMenuItem.Text = "Debug";
@@ -116,7 +118,7 @@
             // disassemblerToolStripMenuItem
             // 
             this.disassemblerToolStripMenuItem.Name = "disassemblerToolStripMenuItem";
-            this.disassemblerToolStripMenuItem.Size = new System.Drawing.Size(143, 22);
+            this.disassemblerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.disassemblerToolStripMenuItem.Text = "Disassembler";
             this.disassemblerToolStripMenuItem.Click += new System.EventHandler(this.disassemblerToolStripMenuItem_Click);
             // 
@@ -126,6 +128,13 @@
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // memoryViewerToolStripMenuItem
+            // 
+            this.memoryViewerToolStripMenuItem.Name = "memoryViewerToolStripMenuItem";
+            this.memoryViewerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.memoryViewerToolStripMenuItem.Text = "Memory Viewer";
+            this.memoryViewerToolStripMenuItem.Click += new System.EventHandler(this.memoryViewerToolStripMenuItem_Click);
             // 
             // MainWindow
             // 
@@ -160,6 +169,7 @@
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem disassemblerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem startToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem memoryViewerToolStripMenuItem;
     }
 }
 

@@ -107,5 +107,11 @@ namespace SharpBoy
             ((GLControl)openGLWindow.Controls[0]).Invalidate();
             ((GLControl)openGLWindow.Controls[0]).Update();
         }
+
+        private void memoryViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MemoryViewer memView = new MemoryViewer();
+            memView.Show();
+        }
     }
 }
