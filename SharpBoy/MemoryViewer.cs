@@ -30,6 +30,9 @@ namespace SharpBoy
 
             for (Byte i = 0; i <= 16 * 4 - 1; i++)
             {
+                if ((UInt32)(Address + i * 16) >= 0x10000)
+                    return;
+
                 lv_memView.Items.Add((String.Format("{0:X4}", Address + i * 16)));
                 for (Byte j = 0; j <= 15; j++)
                     lv_memView.Items[i].SubItems.Add(String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(Address + i * 16 + j))));

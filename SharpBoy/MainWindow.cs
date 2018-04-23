@@ -7,22 +7,40 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 
 namespace SharpBoy
 {
     public partial class MainWindow : Form
     {
-        OpenGLWindow openGLWindow;
-
         public MainWindow()
         {
+            // Initialize all required data before running openTK
+            OpenTK.Toolkit.Init();
             InitializeComponent();
-            
+
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "GUI: Initialized");
+        }
+
+        // It is better to create another class for this?
+        // I need to have access to GL from inside the Emulator not GUI code
+        private void OpenGLKeyPressed(object sender, KeyEventArgs args)
+        {
+            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL KEY");
+        }
+
+        private void OpenGLResize(object sender, EventArgs args)
+        {
+            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL RESIZE");
+            openGLControl.Size = Size;
+        }
+
+        private void OpenGLPaint(object sender, PaintEventArgs args)
+        {
+            //GL.bindte
+            //Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
+            openGLControl.SwapBuffers();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -57,17 +75,6 @@ namespace SharpBoy
             Program.emulator.LoadCartridge(opener.FileName);
 
             Text = Program.emulator.GetCartridge().GetGameTitle();
-
-            openGLWindow = new OpenGLWindow();
-
-            openGLWindow.Location = new Point(5, 5);
-            openGLWindow.Size = new Size(640, 480);
-            openGLWindow.BackColor = Color.Black;
-            openGLWindow.TabIndex = 0;
-            // PROBLEM HERE?
-            Controls.Add(openGLWindow);
-            openGLWindow.Show();
-            ((GLControl)openGLWindow.Controls[0]).Invalidate();
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
@@ -100,12 +107,6 @@ namespace SharpBoy
 
         private void MainWindow_Resize(object sender, EventArgs e)
         {
-            if (openGLWindow == null)
-                return;
-
-            openGLWindow.PerformAutoScale();
-            ((GLControl)openGLWindow.Controls[0]).Invalidate();
-            ((GLControl)openGLWindow.Controls[0]).Update();
         }
 
         private void memoryViewerToolStripMenuItem_Click(object sender, EventArgs e)

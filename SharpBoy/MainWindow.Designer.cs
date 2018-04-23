@@ -1,4 +1,6 @@
-﻿namespace SharpBoy
+﻿using System.Drawing;
+
+namespace SharpBoy
 {
     partial class MainWindow
     {
@@ -38,8 +40,9 @@
             this.miscToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.disassemblerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.memoryViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openGLControl = new OpenTK.GLControl();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -118,9 +121,16 @@
             // disassemblerToolStripMenuItem
             // 
             this.disassemblerToolStripMenuItem.Name = "disassemblerToolStripMenuItem";
-            this.disassemblerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.disassemblerToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
             this.disassemblerToolStripMenuItem.Text = "Disassembler";
             this.disassemblerToolStripMenuItem.Click += new System.EventHandler(this.disassemblerToolStripMenuItem_Click);
+            // 
+            // memoryViewerToolStripMenuItem
+            // 
+            this.memoryViewerToolStripMenuItem.Name = "memoryViewerToolStripMenuItem";
+            this.memoryViewerToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.memoryViewerToolStripMenuItem.Text = "Memory Viewer";
+            this.memoryViewerToolStripMenuItem.Click += new System.EventHandler(this.memoryViewerToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
@@ -128,21 +138,27 @@
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
-            // 
-            // memoryViewerToolStripMenuItem
-            // 
-            this.memoryViewerToolStripMenuItem.Name = "memoryViewerToolStripMenuItem";
-            this.memoryViewerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.memoryViewerToolStripMenuItem.Text = "Memory Viewer";
-            this.memoryViewerToolStripMenuItem.Click += new System.EventHandler(this.memoryViewerToolStripMenuItem_Click);
+
+            this.openGLControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.openGLControl.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.openGLControl.Location = new System.Drawing.Point(0, 0);
+            this.openGLControl.Name = "openGLControl";
+            this.openGLControl.Size = new System.Drawing.Size(629, 565);
+            this.openGLControl.TabIndex = 0;
+            this.openGLControl.VSync = true;
+            this.openGLControl.BackColor = Color.Black;
+            this.openGLControl.Resize += new System.EventHandler(this.OpenGLResize);
+            this.openGLControl.Paint += new System.Windows.Forms.PaintEventHandler(this.OpenGLPaint);
+            this.openGLControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OpenGLKeyPressed);
+
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(624, 441);
+            this.Controls.Add(this.openGLControl);
             this.Controls.Add(this.menuStrip1);
-            this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.Text = "SharpBoy";
@@ -170,6 +186,8 @@
         private System.Windows.Forms.ToolStripMenuItem disassemblerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem startToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem memoryViewerToolStripMenuItem;
+
+        private OpenTK.GLControl openGLControl;
     }
 }
 

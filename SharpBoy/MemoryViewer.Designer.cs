@@ -183,7 +183,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(549, 382);
+            this.ClientSize = new System.Drawing.Size(546, 382);
             this.Controls.Add(this.lv_memView);
             this.Controls.Add(this.cb_specAddress);
             this.Name = "MemoryViewer";
