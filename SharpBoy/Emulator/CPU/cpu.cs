@@ -85,17 +85,49 @@ namespace SharpBoy
 
         // 16 bit registers access
         // FIX THIS!
-        public void set_reg_hl(UInt16 value) { reg_hl = value; }
-        public UInt16 get_reg_hl() { return reg_hl; }
+        public void set_reg_hl(UInt16 value)
+        {
+            Byte hi = (Byte)(value >> 8);
+            Byte lo = (Byte)(value & 0xff);
 
-        public void set_reg_af(UInt16 value) { reg_af = value; }
-        public UInt16 get_reg_af() { return reg_af; }
+            set_reg_h(hi);
+            set_reg_l(lo);
+            reg_hl = value;
+        }
+        public UInt16 get_reg_hl(){ return (UInt16)((get_reg_h() << 8) + get_reg_l()); }
 
-        public void set_reg_bc(UInt16 value) { reg_bc = value; }
-        public UInt16 get_reg_bc() { return reg_bc; }
+        public void set_reg_af(UInt16 value)
+        {
+            Byte hi = (Byte)(value >> 8);
+            Byte lo = (Byte)(value & 0xff);
 
-        public void set_reg_de(UInt16 value) { reg_de = value; }
-        public UInt16 get_reg_de() { return reg_de; }
+            set_reg_a(hi);
+            set_reg_f(lo);
+            reg_af = value;
+        }
+        public UInt16 get_reg_af() { return (UInt16)((get_reg_a() << 8) + get_reg_f()); }
+
+        public void set_reg_bc(UInt16 value)
+        {
+            Byte hi = (Byte)(value >> 8);
+            Byte lo = (Byte)(value & 0xff);
+
+            set_reg_b(hi);
+            set_reg_c(lo);
+            reg_bc = value;
+        }
+        public UInt16 get_reg_bc() { return (UInt16)((get_reg_b() << 8) + get_reg_c()); }
+
+        public void set_reg_de(UInt16 value)
+        {
+            Byte hi = (Byte)(value >> 8);
+            Byte lo = (Byte)(value & 0xff);
+
+            set_reg_d(hi);
+            set_reg_e(lo);
+            reg_de = value;
+        }
+        public UInt16 get_reg_de() { return (UInt16)((get_reg_d() << 8) + get_reg_e()); }
 
         public void SetFlagBit(Flag_Register_Bits bitNumber, bool state)
         {

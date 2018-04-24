@@ -38,6 +38,11 @@ namespace SharpBoy
             OPCODE_CP_n = 0xFE,
             OPCODE_LD_nn_A = 0xEA, // LOAD [$xxxx], nn
             OPCODE_LD_SP_nn = 0x31, // LOAD SP, nn (SP <- nn)
+
+            OPCODE_LD_A_HL = 0x2A, // LOAD A, HL+ (inc)
+            OPCODE_LD_C_A = 0xE2, // LOAD $0xFF00+C, A
+
+            OPCODE_INC_C = 0x0C // INC C
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -58,9 +63,12 @@ namespace SharpBoy
             { Opcode.OPCODE_LHD_A_N, () => ldh_a_n_ins() },
             { Opcode.OPCODE_RRCA, () => rrca_ins() },
             { Opcode.OPCODE_CP_n, () => cp_n_ins() },
-            { Opcode.OPCODE_LD_HL_n, () => ld_hl_n() },
-            { Opcode.OPCODE_LD_nn_A, () => ld_nn_a() },
-            { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn() }
+            { Opcode.OPCODE_LD_HL_n, () => ld_hl_n_ins() },
+            { Opcode.OPCODE_LD_nn_A, () => ld_nn_a_ins() },
+            { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn_ins() },
+            { Opcode.OPCODE_LD_A_HL, () => ld_a_nn_ins() },
+            { Opcode.OPCODE_LD_C_A, () => ld_c_a_ins() },
+            { Opcode.OPCODE_INC_C, () => inc_c_ins() }
         };
 
         public static void unimplemented_ins()
@@ -70,7 +78,31 @@ namespace SharpBoy
             return;
         }
 
-        public static void ld_sp_nn()
+        public static void inc_c_ins()
+        {
+            // TODO: FLAGS
+            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            Program.emulator.getCPU().set_reg_c((Byte)(Program.emulator.getCPU().get_reg_c() + 1));
+            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+        }
+
+        public static void ld_c_a_ins()
+        {
+            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + Program.emulator.getCPU().get_reg_c()), Program.emulator.getCPU().get_reg_a());
+            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+        }
+
+        public static void ld_a_nn_ins()
+        {
+            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+
+            Program.emulator.getCPU().set_reg_a(Program.emulator.GetMemory().ReadFromMemory(Program.emulator.getCPU().get_reg_hl()));
+            Program.emulator.getCPU().set_reg_hl((UInt16)(Program.emulator.getCPU().get_reg_hl()+1));
+            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+        }
+
+        public static void ld_sp_nn_ins()
         {
             UInt16 address = Program.emulator.getCPU().get_reg_pc();
 
@@ -83,7 +115,7 @@ namespace SharpBoy
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
         }
 
-        public static void ld_nn_a()
+        public static void ld_nn_a_ins()
         {
             UInt16 address = Program.emulator.getCPU().get_reg_pc();
 
@@ -97,7 +129,7 @@ namespace SharpBoy
         }
 
 
-        public static void ld_hl_n()
+        public static void ld_hl_n_ins()
         {
             UInt16 address = Program.emulator.getCPU().get_reg_pc();
             Byte value = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
@@ -239,9 +271,6 @@ namespace SharpBoy
             Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
 
             UInt16 value = Convert.ToUInt16((hi << 8) + lo);
-
-            Program.emulator.getCPU().set_reg_h(hi);
-            Program.emulator.getCPU().set_reg_l(lo);
 
             Program.emulator.getCPU().set_reg_hl(value);
             Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
@@ -457,6 +486,22 @@ namespace SharpBoy
                     str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
                     address += 3;
                     break;
+
+                case Opcode.OPCODE_LD_A_HL:
+                    str_op = "LD A, HL+";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_C_A:
+                    str_op = "LD [$FF00+C], A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_INC_C:
+                    str_op = "INC C";
+                    address += 1;
+                    break;
+
                 default:
                     str_op = "UNKNOWN";
                     address++;

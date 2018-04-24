@@ -8,8 +8,11 @@ namespace SharpBoy
 {
     class Emulator
     {
+        public Boolean isRunning = false;
+
         private CPU cpu = new CPU();
         private Memory memory = new Memory();
+        private Renderer renderer = new Renderer();
 
         private Cartridge cart = new Cartridge();
 
@@ -29,6 +32,7 @@ namespace SharpBoy
         public void Start()
         {
             Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
+            isRunning = true;
             cpu.Start();
             return;
         }
@@ -45,6 +49,7 @@ namespace SharpBoy
 
         public Memory GetMemory() { return memory; }
         public CPU getCPU() { return cpu; }
+        public Renderer getRenderer() { return renderer; }
 
         public Cartridge GetCartridge() { return cart; }
     }

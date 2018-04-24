@@ -67,7 +67,7 @@
     <Compile Include="Emulator\CPU\Opcodes.cs" />
     <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\Memory.cs" />
-    <Compile Include="Emulator\Render.cs" />
+    <Compile Include="Emulator\Renderer.cs" />
     <Compile Include="LoggerWindow.cs">
       <SubType>Form</SubType>
     </Compile>

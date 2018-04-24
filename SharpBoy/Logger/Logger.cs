@@ -35,6 +35,9 @@ namespace SharpBoy.Logger
             if (!logfile.CanWrite)
                 return;
 
+            if (!Convert.ToBoolean(log_level & level))
+                return;
+
             // Add new line marker to end of each message 
             message += Environment.NewLine;
 
@@ -42,9 +45,6 @@ namespace SharpBoy.Logger
             logfile.Write(Encoding.Default.GetBytes(mess), 0, Encoding.Default.GetByteCount(mess));
 
             if (Program.loggerW == null)
-                return;
-
-            if (!Convert.ToBoolean(log_level & level))
                 return;
 
             Program.loggerW.Invoke(new Action(delegate ()
