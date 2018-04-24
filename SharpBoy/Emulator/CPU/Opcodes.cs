@@ -8,6 +8,9 @@ namespace SharpBoy
 {
     class Opcodes
     {
+        // MAY CAUSE ERRORS?
+        private static CPU cpu = Program.emulator.getCPU();
+
         public enum Opcode : Byte
         {
             OPCODE_NOP = 0x00,
@@ -42,7 +45,13 @@ namespace SharpBoy
             OPCODE_LD_A_HL = 0x2A, // LOAD A, HL+ (inc)
             OPCODE_LD_C_A = 0xE2, // LOAD $0xFF00+C, A
 
-            OPCODE_INC_C = 0x0C // INC C
+            OPCODE_INC_C = 0x0C, // INC C
+            OPCODE_CALL_ADDRESS = 0xCD,
+
+            OPCODE_LD_BC_nn = 0x01, // LOAD BC, nn
+            OPCODE_DEC_BC = 0x0B, // DEC BC
+            OPCODE_LD_A_B = 0x78, // LOAD A, B
+            OPCODE_OR_A_C = 0xB1, // OR C
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -68,274 +77,322 @@ namespace SharpBoy
             { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn_ins() },
             { Opcode.OPCODE_LD_A_HL, () => ld_a_nn_ins() },
             { Opcode.OPCODE_LD_C_A, () => ld_c_a_ins() },
-            { Opcode.OPCODE_INC_C, () => inc_c_ins() }
+            { Opcode.OPCODE_INC_C, () => inc_c_ins() },
+            { Opcode.OPCODE_CALL_ADDRESS, () => call_adr_ins() },
+            { Opcode.OPCODE_LD_BC_nn, () => ld_bc_nn_ins() },
+            { Opcode.OPCODE_DEC_BC, () => dec_bc_ins() },
+            { Opcode.OPCODE_LD_A_B, () => ld_a_b_ins() }
         };
 
         public static void unimplemented_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
-            return;
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_a_b_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.set_reg_a(cpu.get_reg_b());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void dec_bc_ins()
+        {
+            // ANY FLAGS?
+            UInt16 address = cpu.get_reg_pc();
+
+            UInt16 value = (UInt16)(cpu.get_reg_bc() - 1);
+            cpu.set_reg_bc(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC BC INSTRUCTION EXECUTED");
+        }
+
+        public static void ld_bc_nn_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+            UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+
+            cpu.set_reg_bc(value);
+            cpu.set_reg_pc((UInt16)(address + 3));
+        }
+
+        public static void call_adr_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_sp((UInt16)(address + 3));
+
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+            UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+            cpu.set_reg_pc(value);
         }
 
         public static void inc_c_ins()
         {
             // TODO: FLAGS
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Program.emulator.getCPU().set_reg_c((Byte)(Program.emulator.getCPU().get_reg_c() + 1));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_c((Byte)(cpu.get_reg_c() + 1));
+            cpu.set_reg_pc((UInt16)(address + 1));
         }
 
         public static void ld_c_a_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + Program.emulator.getCPU().get_reg_c()), Program.emulator.getCPU().get_reg_a());
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+            UInt16 address = cpu.get_reg_pc();
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + cpu.get_reg_c()), cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
         }
 
         public static void ld_a_nn_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Program.emulator.getCPU().set_reg_a(Program.emulator.GetMemory().ReadFromMemory(Program.emulator.getCPU().get_reg_hl()));
-            Program.emulator.getCPU().set_reg_hl((UInt16)(Program.emulator.getCPU().get_reg_hl()+1));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_hl()));
+            cpu.set_reg_hl((UInt16)(cpu.get_reg_hl()+1));
+            cpu.set_reg_pc((UInt16)(address + 1));
         }
 
         public static void ld_sp_nn_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Byte hi = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-            Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
             UInt16 value = Convert.ToUInt16((hi << 8) + lo);
 
-            Program.emulator.getCPU().set_reg_sp(value);
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
+            cpu.set_reg_sp(value);
+            cpu.set_reg_pc((UInt16)(address + 3));
         }
 
         public static void ld_nn_a_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Byte hi = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-            Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
             UInt16 newAddress = Convert.ToUInt16((hi << 8) + lo);
 
-            Program.emulator.GetMemory().WriteToMemory(newAddress, Program.emulator.getCPU().get_reg_a());
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
+            Program.emulator.GetMemory().WriteToMemory(newAddress, cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 3));
         }
 
 
         public static void ld_hl_n_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Byte value = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            UInt16 address = cpu.get_reg_pc();
+            Byte value = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
             // TODO: Fix here!
-            Program.emulator.getCPU().set_reg_f(value);
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
+            cpu.set_reg_f(value);
+            cpu.set_reg_pc((UInt16)(address + 2));
         }
 
         public static void cp_n_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
             
 
-            Byte value = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            Byte value = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
-            if (Program.emulator.getCPU().get_reg_a() == value)
-                Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+            if (cpu.get_reg_a() == value)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
 
-            if (Program.emulator.getCPU().get_reg_a() < value)
-                Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
+            if (cpu.get_reg_a() < value)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
 
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "CP A, n INSTRUCTION EXECUTED");
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "CP A, n INSTRUCTION EXECUTED");
         }
 
         public static void rrca_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, (Program.emulator.getCPU().get_reg_a() & 1) == 1);
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+            UInt16 address = cpu.get_reg_pc();
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, (cpu.get_reg_a() & 1) == 1);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
 
             // Need to do Zero Flag!
 
-            Program.emulator.getCPU().set_reg_a((Byte)(Program.emulator.getCPU().get_reg_a() >> 1));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "RRCA INSTRUCTION EXECUTED");
+            cpu.set_reg_a((Byte)(cpu.get_reg_a() >> 1));
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "RRCA INSTRUCTION EXECUTED");
         }
 
 
         public static void ldh_a_n_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Byte value = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            UInt16 address = cpu.get_reg_pc();
+            Byte value = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-            Program.emulator.getCPU().set_reg_a(Program.emulator.GetMemory().ReadFromMemory((UInt16)(0xFF00 + value)));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH A, [$FF00+n] INSTRUCTION EXECUTED");
+            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory((UInt16)(0xFF00 + value)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH A, [$FF00+n] INSTRUCTION EXECUTED");
         }
 
         public static void ldh_n_a_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Byte value = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            UInt16 address = cpu.get_reg_pc();
+            Byte value = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-            Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + value), Program.emulator.getCPU().get_reg_a());
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH [$FF00+n],A INSTRUCTION EXECUTED");
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + value), cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH [$FF00+n],A INSTRUCTION EXECUTED");
         }
 
         public static void di_ins()
         {
             // NOT IMPLEMENTED!
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_pc((UInt16)(address + 1));
             return;
         }
 
         public static void ld_a_n_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Program.emulator.getCPU().set_reg_a(Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1)));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD A,n INSTRUCTION EXECUTED");
+            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD A,n INSTRUCTION EXECUTED");
         }
 
         public static void jr_nz_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            if (!Program.emulator.getCPU().GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO))
+            if (!cpu.GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO))
             {
-                Byte add_pc = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                Byte add_pc = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
                 // Why I need to Add 2?
-                Program.emulator.getCPU().set_reg_pc((UInt16)(address + (SByte)add_pc + 2));
+                cpu.set_reg_pc((UInt16)(address + (SByte)add_pc + 2));
                 return;
             }
 
-            Program.emulator.getCPU().set_reg_pc((UInt16)(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_NZ INSTRUCTION EXECUTED");
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_NZ INSTRUCTION EXECUTED");
         }
 
         public static void nop_instruction()
         {
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(Program.emulator.getCPU().get_reg_pc() + 1));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "NOP INSTRUCTION EXECUTED");
+            cpu.set_reg_pc(Convert.ToUInt16(cpu.get_reg_pc() + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "NOP INSTRUCTION EXECUTED");
         }
 
         public static void jmp_instruction()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Byte hi = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-            Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
             UInt16 newAddress = Convert.ToUInt16((hi << 8) + lo);
 
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JMP INSTRUCTION EXECUTED AT ADDRESS: " + address.ToString() + " TO ADDRESS: " + newAddress.ToString());
-            Program.emulator.getCPU().set_reg_pc(newAddress);
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JMP INSTRUCTION EXECUTED AT ADDRESS: " + address.ToString() + " TO ADDRESS: " + newAddress.ToString());
+            cpu.set_reg_pc(newAddress);
         }
 
         public static void xor_a_ins()
         {
             
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
 
-            Byte reg_a = Program.emulator.getCPU().get_reg_a();
-            Program.emulator.getCPU().set_reg_a(Convert.ToByte(reg_a ^ reg_a));
+            Byte reg_a = cpu.get_reg_a();
+            cpu.set_reg_a(Convert.ToByte(reg_a ^ reg_a));
 
-            if (Program.emulator.getCPU().get_reg_a() == 0)
-                Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+            if (cpu.get_reg_a() == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
 
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(Program.emulator.getCPU().get_reg_pc() + 1));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "XOR_A INSTRUCTION EXECUTED");
+            cpu.set_reg_pc(Convert.ToUInt16(cpu.get_reg_pc() + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "XOR_A INSTRUCTION EXECUTED");
         }
 
         public static void ld_hl_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Byte hi = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-            Byte lo = Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
             UInt16 value = Convert.ToUInt16((hi << 8) + lo);
 
-            Program.emulator.getCPU().set_reg_hl(value);
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 3));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL INSTRUCTION EXECUTED");
+            cpu.set_reg_hl(value);
+            cpu.set_reg_pc((UInt16)(address + 3));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL INSTRUCTION EXECUTED");
         }
 
 
         public static void ld_c_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Program.emulator.getCPU().set_reg_c(Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1)));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD C INSTRUCTION EXECUTED");
+            cpu.set_reg_c(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD C INSTRUCTION EXECUTED");
         }
 
         public static void ld_b_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Program.emulator.getCPU().set_reg_b(Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1)));
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 2));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD B INSTRUCTION EXECUTED");
+            cpu.set_reg_b(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD B INSTRUCTION EXECUTED");
         }
 
         public static void ldd_hl_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Program.emulator.getCPU().set_reg_l((Byte)(Program.emulator.getCPU().get_reg_a() - 1));
+            cpu.set_reg_l((Byte)(cpu.get_reg_a() - 1));
 
-            Program.emulator.getCPU().set_reg_hl(Convert.ToUInt16(Program.emulator.getCPU().get_reg_a()));
-            Program.emulator.getCPU().set_reg_hl((UInt16)Convert.ToInt16(Program.emulator.getCPU().get_reg_hl() - 1));
+            cpu.set_reg_hl(Convert.ToUInt16(cpu.get_reg_a()));
+            cpu.set_reg_hl((UInt16)Convert.ToInt16(cpu.get_reg_hl() - 1));
 
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL, A DEC A INSTRUCTION EXECUTED");
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL, A DEC A INSTRUCTION EXECUTED");
         }
 
         public static void dec_b_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Byte value = (Byte)(Program.emulator.getCPU().get_reg_b() - 1);
+            Byte value = (Byte)(cpu.get_reg_b() - 1);
 
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
-            Program.emulator.getCPU().set_reg_b(value);
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC B INSTRUCTION EXECUTED");
+            cpu.set_reg_b(value);
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC B INSTRUCTION EXECUTED");
         }
 
         public static void dec_c_ins()
         {
-            UInt16 address = Program.emulator.getCPU().get_reg_pc();
+            UInt16 address = cpu.get_reg_pc();
 
-            Byte value = (Byte)(Program.emulator.getCPU().get_reg_c() - 1);
+            Byte value = (Byte)(cpu.get_reg_c() - 1);
 
             // TODO: NEED TO ADD CARRY FLAG
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
-            Program.emulator.getCPU().SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
-            Program.emulator.getCPU().set_reg_c(value);
-            Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC C INSTRUCTION EXECUTED");
+            cpu.set_reg_c(value);
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC C INSTRUCTION EXECUTED");
         }
 
 
@@ -345,9 +402,9 @@ namespace SharpBoy
                 opcodes[opcode].Invoke();
             else
             {
-                UInt16 address = Program.emulator.getCPU().get_reg_pc();
-                Program.emulator.getCPU().set_reg_pc(Convert.ToUInt16(address + 1));
-                Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "Trying to execute not implemented opcode: " + opcode.ToString());
+                UInt16 address = cpu.get_reg_pc();
+                cpu.set_reg_pc((UInt16)(address + 1));
+                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "Trying to execute not implemented opcode: " + opcode.ToString());
             }
         }
 
@@ -369,8 +426,8 @@ namespace SharpBoy
                 case Opcode.OPCODE_JMP:
                     str_op = "JMP ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
                     str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "h";
                     address += 3;
@@ -384,8 +441,8 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_HL:
                     str_op = "LD HL, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
                     str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "h";
                     address += 3;
@@ -403,7 +460,7 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_JR_NZ:
                     str_op = "JR NZ, ";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
                     str_op += String.Format("{0:X4}", Convert.ToUInt16(address + val1 + 2)) + "h";
                     address += 2;
                     break;
@@ -415,19 +472,19 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_LD_A_n:
                     str_op = "LD A, ";
-                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1))) + "h";
+                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_LD_B:
                     str_op = "LD B, ";
-                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1))) + "h";
+                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_LD_C:
                     str_op = "LD C, ";
-                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1))) + "h";
+                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
                     break;
 
@@ -443,35 +500,35 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_LDH_N_A:
                     str_op = "LDH [$";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
                     str_op += String.Format("{0:X4}", 0xFF00 + (Byte)val1) + "], A";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_LHD_A_N:
                     str_op = "LDH A, [$";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
                     str_op += String.Format("{0:X4}", 0xFF00 + (Byte)val1) + "]";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_CP_n:
                     str_op = "CP A, ";
-                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1))) + "h";
+                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_LD_HL_n:
                     str_op = "LD HL, ";
-                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1))) + "h";
+                    str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_LD_nn_A:
                     str_op = "LD [$";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
                     str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "], A";
                     address += 3;
@@ -480,8 +537,8 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_SP_nn:
                     str_op = "LD SP, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory(Convert.ToUInt16(address + 1));
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
                     str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
                     address += 3;
@@ -499,6 +556,36 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_INC_C:
                     str_op = "INC C";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_CALL_ADDRESS:
+                    str_op = "CALL, ";
+
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    address += 3;
+                    break;
+
+                case Opcode.OPCODE_LD_BC_nn:
+                    str_op = "LD BC, ";
+
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    address += 3;
+                    break;
+
+                case Opcode.OPCODE_DEC_BC:
+                    str_op = "DEC BC";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_A_B:
+                    str_op = "LD A, B";
                     address += 1;
                     break;
 

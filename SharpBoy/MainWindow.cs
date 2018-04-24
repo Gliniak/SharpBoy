@@ -20,24 +20,31 @@ namespace SharpBoy
             OpenTK.Toolkit.Init();
             InitializeComponent();
 
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "GUI: Initialized");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "GUI: Initialized");
         }
 
         // It is better to create another class for this?
         // I need to have access to GL from inside the Emulator not GUI code
         private void OpenGLKeyPressed(object sender, KeyEventArgs args)
         {
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL KEY");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL KEY");
         }
 
         private void OpenGLResize(object sender, EventArgs args)
         {
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL RESIZE");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL RESIZE");
             openGLControl.Size = Size;
+            GL.Viewport(Size);
         }
 
         private void OpenGLPaint(object sender, PaintEventArgs args)
         {
+            if (!Program.emulator.isRunning)
+                return;
+
+            //GL.
+            //GL.DrawPixels(256, 256, PixelFormat.Red, PixelType.Byte, Program.emulator.getRenderer().GetTilePatternSprites());
+            //GL.DrawPixels(500, 500, PixelFormat.Red, PixelType.Byte, videoTest);
             //GL.bindte
             //Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
             openGLControl.SwapBuffers();
@@ -70,7 +77,7 @@ namespace SharpBoy
             if (!opener.CheckFileExists)
                 return;
 
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Reading File: " + opener.FileName);
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Reading File: " + opener.FileName);
 
             Program.emulator.LoadCartridge(opener.FileName);
 

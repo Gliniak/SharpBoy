@@ -80,11 +80,11 @@ namespace SharpBoy
             file.Read(header, 0, (UInt16)cartridgeAddress.CARTRIDGE_HEADER_SIZE);
 
             Program.emulator.GetMemory().WriteToMemory((UInt16)cartridgeAddress.CARTRIDGE_ADDRESS_BEGIN, header, (UInt16)header.Length);
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "Loaded Data Header: \n" + BitConverter.ToString(header).Replace("-", " "));
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "GAME NAME: " + GetGameTitle() + Environment.NewLine);
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "CARTRIDGE TYPE: " + GetCartridgeType());
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "ROM TYPE: " + GetROMsize());
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "RAM TYPE: " + GetRAMsize());
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "Loaded Data Header: \n" + BitConverter.ToString(header).Replace("-", " "));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "GAME NAME: " + GetGameTitle() + Environment.NewLine);
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "CARTRIDGE TYPE: " + GetCartridgeType());
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "ROM TYPE: " + GetROMsize());
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "RAM TYPE: " + GetRAMsize());
 
             // Loading data
             byte[] data = new byte[0x7FFF - (UInt16)cartridgeAddress.CARTRIDGE_HEADER_SIZE];

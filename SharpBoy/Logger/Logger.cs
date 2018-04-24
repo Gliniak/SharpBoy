@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace SharpBoy.Logger
+namespace SharpBoy
 {
     public class Logger
     {

@@ -23,7 +23,7 @@ namespace SharpBoy
             
         public bool Initialize()
         {
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Initializing...");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Initializing...");
             memory.InitializeMemory();
 
             return true;
@@ -31,7 +31,7 @@ namespace SharpBoy
 
         public void Start()
         {
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
             isRunning = true;
             cpu.Start();
             return;

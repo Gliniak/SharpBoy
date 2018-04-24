@@ -39,15 +39,17 @@ namespace SharpBoy
             WriteToMemory(0xFF47, 0xFC);
             WriteToMemory(0xFF48, 0xFF);
             WriteToMemory(0xFF49, 0xFF);
-
-            Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "INITIALIZE MEMORY TO VALUE: 0x00");
+            
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "INITIALIZE MEMORY TO VALUE: 0x00");
             return;
         }
 
         public void WriteToMemory(UInt16 Address, Byte Value)
         {
+            //if (Address < 0x8000) // ROM place
+            //    return;
+
             BaseMemory[Address] = Value;
-            return;
         }
 
         public void WriteToMemory(UInt16 Address, Byte[] Values, UInt16 count)

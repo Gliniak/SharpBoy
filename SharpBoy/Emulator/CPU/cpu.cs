@@ -156,7 +156,7 @@ namespace SharpBoy
 
             if (!Enum.IsDefined(typeof(Opcodes.Opcode), op))
             {
-                Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "UNKNOWN OPCODE OCCURED: " + String.Format("{0:X2}", op)
+                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "UNKNOWN OPCODE OCCURED: " + String.Format("{0:X2}", op)
                     + " At Address: " + String.Format("{0:X4}", reg_pc));
 
                 set_reg_pc((UInt16)(get_reg_pc() + 1));
