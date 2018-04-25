@@ -16,6 +16,9 @@ namespace SharpBoy
 
         private Boolean FAST_CLOCK = true;
 
+        public delegate void InstructionExecutedHandler(object sender, EventArgs e);
+        public event InstructionExecutedHandler onInstructionExecute;
+
         public enum Flag_Register_Bits : Byte
         {
             FLAG_REGISTER_ZERO = 0x07,
@@ -164,6 +167,12 @@ namespace SharpBoy
             }
 
             Opcodes.ExecuteOpcode((Opcodes.Opcode)op);
+
+            if (onInstructionExecute == null)
+                return;
+
+            EventArgs args = new EventArgs();
+            onInstructionExecute(this, args);
         }
 
         public void Start()
@@ -171,9 +180,9 @@ namespace SharpBoy
             do
             {
                 exe_ins();
-            } while (true);
+            } while (Program.emulator.isRunning);
             
-            // Need to implement fast timer!
+            // Need to implement fast timer for RTC support!
             //Stopwatch timer = new Stopwatch();
 
 

@@ -52,6 +52,12 @@ namespace SharpBoy
             OPCODE_DEC_BC = 0x0B, // DEC BC
             OPCODE_LD_A_B = 0x78, // LOAD A, B
             OPCODE_OR_A_C = 0xB1, // OR C
+
+            OPCODE_RET = 0xC9, // RET
+            OPCODE_LD_DE_A = 0x12, // LOAD DE, A
+            OPCODE_INC_DE = 0x13, 
+            OPCODE_LD_DE_nn = 0x11,
+
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -81,12 +87,69 @@ namespace SharpBoy
             { Opcode.OPCODE_CALL_ADDRESS, () => call_adr_ins() },
             { Opcode.OPCODE_LD_BC_nn, () => ld_bc_nn_ins() },
             { Opcode.OPCODE_DEC_BC, () => dec_bc_ins() },
-            { Opcode.OPCODE_LD_A_B, () => ld_a_b_ins() }
+            { Opcode.OPCODE_LD_A_B, () => ld_a_b_ins() },
+            { Opcode.OPCODE_OR_A_C, () => or_a_c_ins() },
+            { Opcode.OPCODE_RET, () => ret_ins() },
+            { Opcode.OPCODE_LD_DE_A, () => ld_de_a_ins() },
+            { Opcode.OPCODE_INC_DE, () => inc_de_ins() },
+            { Opcode.OPCODE_LD_DE_nn, () => ld_de_nn_ins() }
         };
 
         public static void unimplemented_ins()
         {
             UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_de_nn_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+            UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+
+            cpu.set_reg_de(value);
+            cpu.set_reg_pc((UInt16)(address + 3));
+        }
+
+        public static void inc_de_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_de((UInt16)(cpu.get_reg_de() + 1));
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_de_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_de(cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ret_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            // Is it correct?
+            cpu.set_reg_pc(cpu.get_reg_sp());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void or_a_c_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            cpu.set_reg_a((Byte)(cpu.get_reg_a() | cpu.get_reg_c()));
+
+            if(cpu.get_reg_a() == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
@@ -589,6 +652,35 @@ namespace SharpBoy
                     address += 1;
                     break;
 
+                case Opcode.OPCODE_OR_A_C:
+                    str_op = "OR A, C";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_RET:
+                    str_op = "RET $" + String.Format("{0:X4}", cpu.get_reg_sp());
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_DE_A:
+                    str_op = "LOAD DE, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_INC_DE:
+                    str_op = "INC DE";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_DE_nn:
+                    str_op = "LD DE, ";
+
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    address += 3;
+                    break;
                 default:
                     str_op = "UNKNOWN";
                     address++;

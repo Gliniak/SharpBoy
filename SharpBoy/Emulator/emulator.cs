@@ -39,6 +39,7 @@ namespace SharpBoy
 
         public void Stop()
         {
+            isRunning = false;
             return;
         }
 
