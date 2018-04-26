@@ -178,6 +178,7 @@ namespace SharpBoy
         private void btn_refresh_Click(object sender, EventArgs e)
         {
             lv_windowLoadData(Program.emulator.getCPU().get_reg_pc());
+            cpu_regs_update_in_window();
         }
     }
 }

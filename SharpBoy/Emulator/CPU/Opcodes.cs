@@ -121,10 +121,9 @@ namespace SharpBoy
 
         public static void ret_ins()
         {
-            UInt16 address = cpu.get_reg_pc();
             // Is it correct?
             cpu.set_reg_pc(cpu.get_reg_sp());
-            cpu.set_reg_pc((UInt16)(address + 1));
+            cpu.set_reg_pc((UInt16)(cpu.get_reg_pc() + 1));
         }
 
         public static void or_a_c_ins()
@@ -332,7 +331,7 @@ namespace SharpBoy
                 Byte add_pc = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
                 // Why I need to Add 2?
-                cpu.set_reg_pc((UInt16)(address + (SByte)add_pc + 2));
+                cpu.set_reg_pc((UInt16)((address + (SByte)(add_pc)) + 2));
                 return;
             }
 
