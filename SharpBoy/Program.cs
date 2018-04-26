@@ -5,14 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace SharpBoy
 {
     static class Program
     {
         public static Emulator emulator = new Emulator();
         public static LoggerWindow loggerW;
-
-        public static Thread emulatorThread;
         /// <summary>
         /// Główny punkt wejścia dla aplikacji.
         /// </summary>

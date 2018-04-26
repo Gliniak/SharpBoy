@@ -9,6 +9,7 @@ namespace SharpBoy
     class Emulator
     {
         public Boolean isRunning = false;
+        public List<UInt16> breakPointsList = new List<UInt16>();
 
         private CPU cpu = new CPU();
         private Memory memory = new Memory();
@@ -33,14 +34,15 @@ namespace SharpBoy
         {
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
             isRunning = true;
+
             cpu.Start();
-            return;
         }
 
         public void Stop()
         {
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STOPPED");
+
             isRunning = false;
-            return;
         }
 
         public void LoadCartridge(String path)

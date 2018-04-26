@@ -14,50 +14,41 @@ namespace SharpBoy
         public enum Opcode : Byte
         {
             OPCODE_NOP = 0x00,
+
+            OPCODE_INC_C = 0x0C, // INC C
+            OPCODE_INC_DE = 0x13,
             OPCODE_DEC_B = 0x05, // DEC B
             OPCODE_DEC_C = 0x0D, // DEC C
-
+            OPCODE_DEC_BC = 0x0B, // DEC BC
             OPCODE_LD_A_n = 0x3E, // LOAD A, n
-
-            OPCODE_LD_B = 0x06, // LOAD B, n
-            OPCODE_LD_C = 0x0E, // LOAD C, n
-
-            OPCODE_JR_NZ = 0x20, // JR_FLAG_ZERO_RESET
-            OPCODE_LD_HL = 0x21, // LOAD HL, nn
-
-            OPCODE_LDD_HL = 0x32, // LOAD DEC HL, A - Set A in HL and decrease value by 1
+            OPCODE_LD_B_n = 0x06, // LOAD B, n
+            OPCODE_LD_C_n = 0x0E, // LOAD C, n
+            OPCODE_LD_A_B = 0x78, // LOAD A, B
+            OPCODE_LD_ADR_C_A = 0xE2, // LOAD $0xFF00+C, A
+            OPCODE_LD_A_HL = 0x2A, // LOAD A, HL+ (inc)
+            OPCODE_LD_DE_A = 0x12, // LOAD DE, A
             OPCODE_LD_HL_n = 0x36, // LOAD HL, n
-
-            OPCODE_JMP = 0xC3, // IMPLEMENTED
-            OPCODE_XOR = 0xAF, // XOR reg_a
-
-            OPCODE_DI = 0xF3, // DI - Disable Interrupts
-
-            OPCODE_RRCA = 0x0F, // Rotate A Right
-
+            OPCODE_LD_BC_nn = 0x01, // LOAD BC, nn
+            OPCODE_LD_DE_nn = 0x11,
+            OPCODE_LD_HL_nn = 0x21, // LOAD HL, nn
+            OPCODE_LD_SP_nn = 0x31, // LOAD SP, nn (SP <- nn)
+            OPCODE_LD_nn_A = 0xEA, // LOAD [$xxxx], A
+            OPCODE_LDD_HL = 0x32, // LOAD DEC HL, A - Set A in HL and decrease value by 1
             OPCODE_LDH_N_A = 0xE0, // LOAD A to $FF00+n
             OPCODE_LHD_A_N = 0xF0, // LOAD $FF00+n to A
 
-            OPCODE_CP_n = 0xFE,
-            OPCODE_LD_nn_A = 0xEA, // LOAD [$xxxx], nn
-            OPCODE_LD_SP_nn = 0x31, // LOAD SP, nn (SP <- nn)
 
-            OPCODE_LD_A_HL = 0x2A, // LOAD A, HL+ (inc)
-            OPCODE_LD_C_A = 0xE2, // LOAD $0xFF00+C, A
-
-            OPCODE_INC_C = 0x0C, // INC C
-            OPCODE_CALL_ADDRESS = 0xCD,
-
-            OPCODE_LD_BC_nn = 0x01, // LOAD BC, nn
-            OPCODE_DEC_BC = 0x0B, // DEC BC
-            OPCODE_LD_A_B = 0x78, // LOAD A, B
+            // OTHER OPCODES
             OPCODE_OR_A_C = 0xB1, // OR C
-
+            OPCODE_XOR = 0xAF, // XOR reg_a
+            OPCODE_JR_NZ = 0x20, // JR_FLAG_ZERO_RESET
+            OPCODE_JMP = 0xC3,
+            OPCODE_DI = 0xF3, // DI - Disable Interrupts
+            OPCODE_RRCA = 0x0F, // Rotate A Right
+            OPCODE_CP_n = 0xFE,
+            OPCODE_CALL_ADDRESS = 0xCD,
             OPCODE_RET = 0xC9, // RET
-            OPCODE_LD_DE_A = 0x12, // LOAD DE, A
-            OPCODE_INC_DE = 0x13, 
-            OPCODE_LD_DE_nn = 0x11,
-
+            
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -65,9 +56,9 @@ namespace SharpBoy
             { Opcode.OPCODE_NOP, () => nop_instruction() },
             { Opcode.OPCODE_JMP, () => jmp_instruction() },
             { Opcode.OPCODE_XOR, () => xor_a_ins() },
-            { Opcode.OPCODE_LD_HL, () => ld_hl_ins() },
-            { Opcode.OPCODE_LD_C, () => ld_c_ins() },
-            { Opcode.OPCODE_LD_B, () => ld_b_ins() },
+            { Opcode.OPCODE_LD_HL_nn, () => ld_hl_nn_ins() },
+            { Opcode.OPCODE_LD_C_n, () => ld_c_ins() },
+            { Opcode.OPCODE_LD_B_n, () => ld_b_ins() },
             { Opcode.OPCODE_LDD_HL, () => ldd_hl_ins() },
             { Opcode.OPCODE_DEC_B, () => dec_b_ins() },
             { Opcode.OPCODE_JR_NZ, () => jr_nz_ins() },
@@ -82,7 +73,7 @@ namespace SharpBoy
             { Opcode.OPCODE_LD_nn_A, () => ld_nn_a_ins() },
             { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn_ins() },
             { Opcode.OPCODE_LD_A_HL, () => ld_a_nn_ins() },
-            { Opcode.OPCODE_LD_C_A, () => ld_c_a_ins() },
+            { Opcode.OPCODE_LD_ADR_C_A, () => ld_c_a_ins() },
             { Opcode.OPCODE_INC_C, () => inc_c_ins() },
             { Opcode.OPCODE_CALL_ADDRESS, () => call_adr_ins() },
             { Opcode.OPCODE_LD_BC_nn, () => ld_bc_nn_ins() },
@@ -254,8 +245,7 @@ namespace SharpBoy
             UInt16 address = cpu.get_reg_pc();
             Byte value = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-            // TODO: Fix here!
-            cpu.set_reg_f(value);
+            cpu.set_reg_hl(value);
             cpu.set_reg_pc((UInt16)(address + 2));
         }
 
@@ -284,10 +274,13 @@ namespace SharpBoy
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, (cpu.get_reg_a() & 1) == 1);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
-
-            // Need to do Zero Flag!
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, false); // Do we have to clear it?
 
             cpu.set_reg_a((Byte)(cpu.get_reg_a() >> 1));
+
+            if(cpu.get_reg_a() == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
             cpu.set_reg_pc((UInt16)(address + 1));
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "RRCA INSTRUCTION EXECUTED");
         }
@@ -315,7 +308,7 @@ namespace SharpBoy
 
         public static void di_ins()
         {
-            // NOT IMPLEMENTED!
+            // TODO: NOT IMPLEMENTED!
             UInt16 address = cpu.get_reg_pc();
             cpu.set_reg_pc((UInt16)(address + 1));
             return;
@@ -383,7 +376,7 @@ namespace SharpBoy
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "XOR_A INSTRUCTION EXECUTED");
         }
 
-        public static void ld_hl_ins()
+        public static void ld_hl_nn_ins()
         {
             UInt16 address = cpu.get_reg_pc();
 
@@ -449,11 +442,15 @@ namespace SharpBoy
 
             Byte value = (Byte)(cpu.get_reg_c() - 1);
 
-            // TODO: NEED TO ADD CARRY FLAG
+            // TODO: NEED TO ADD HALF-CARRY FLAG
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
             cpu.set_reg_c(value);
+
+            if((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
             cpu.set_reg_pc((UInt16)(address + 1));
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC C INSTRUCTION EXECUTED");
         }
@@ -501,7 +498,7 @@ namespace SharpBoy
                     address++;
                     break;
 
-                case Opcode.OPCODE_LD_HL:
+                case Opcode.OPCODE_LD_HL_nn:
                     str_op = "LD HL, ";
 
                     val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
@@ -539,13 +536,13 @@ namespace SharpBoy
                     address += 2;
                     break;
 
-                case Opcode.OPCODE_LD_B:
+                case Opcode.OPCODE_LD_B_n:
                     str_op = "LD B, ";
                     str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
                     break;
 
-                case Opcode.OPCODE_LD_C:
+                case Opcode.OPCODE_LD_C_n:
                     str_op = "LD C, ";
                     str_op += String.Format("{0:X2}", Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1))) + "h";
                     address += 2;
@@ -612,7 +609,7 @@ namespace SharpBoy
                     address += 1;
                     break;
 
-                case Opcode.OPCODE_LD_C_A:
+                case Opcode.OPCODE_LD_ADR_C_A:
                     str_op = "LD [$FF00+C], A";
                     address += 1;
                     break;

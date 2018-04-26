@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,9 +17,15 @@ namespace SharpBoy
         public DisassemblerWindow()
         {
             InitializeComponent();
+
+            if(Program.emulator.isRunning)
+                btn_start.Text = "Stop";
+
+            //Program.emulator.Stop();
+            //Program.emulator.getCPU().onInstructionExecute += new CPU.InstructionExecutedHandler(cpu_regs_update_in_window, EventArgs.Empty);
         }
 
-        private void cpu_regs_update_in_window()
+        public void cpu_regs_update_in_window()
         {
             tb_reg_pc_dis.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_pc());
             tb_reg_sp.Text = String.Format("{0:X4}", Program.emulator.getCPU().get_reg_sp());
@@ -65,11 +72,15 @@ namespace SharpBoy
                 lv_dissassembly.Items.Add(item);
             }
 
-            ListViewItem sel_item = lv_dissassembly.Items[32];
+            if (lv_dissassembly.Items.Count == 0)
+                return;
+
+            int index = GetItemIndexWithAddress(String.Format("{0:X4}", i_address));
+            ListViewItem sel_item = lv_dissassembly.Items[index];
             sel_item.Selected = true;
             sel_item.Focused = true;
             lv_dissassembly.Select();
-            lv_dissassembly.EnsureVisible(32);
+            lv_dissassembly.EnsureVisible(index);
         }
 
         private void DisassemblerWindow_Load(object sender, EventArgs e)
@@ -137,6 +148,36 @@ namespace SharpBoy
         {
             UInt16 address = UInt16.Parse(tb_goto_address.Text, NumberStyles.HexNumber);
             lv_windowLoadData(address);
+        }
+
+        private void bt_addBreakpoint_Click(object sender, EventArgs e)
+        {
+            UInt16 address = UInt16.Parse(tb_breakpointAdr.Text, NumberStyles.HexNumber);
+            Program.emulator.breakPointsList.Add(address);
+
+            lb_breakpoints.Items.Add(String.Format("{0:X4}", address));
+        }
+
+        private void btn_start_Click(object sender, EventArgs e)
+        {
+            if (Program.emulator.isRunning)
+            {
+                Program.emulator.Stop();
+                btn_start.Text = "Start";
+
+                lv_windowLoadData(Program.emulator.getCPU().get_reg_pc());
+            }
+            else
+            {
+                Program.emulator.Start();
+
+                btn_start.Text = "Stop";
+            }
+        }
+
+        private void btn_refresh_Click(object sender, EventArgs e)
+        {
+            lv_windowLoadData(Program.emulator.getCPU().get_reg_pc());
         }
     }
 }

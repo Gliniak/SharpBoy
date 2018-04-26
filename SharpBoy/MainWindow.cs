@@ -88,6 +88,9 @@ namespace SharpBoy
         {
             Program.emulator.Stop();
 
+            if (Program.loggerW == null)
+                return;
+
             Program.loggerW.Invoke(new Action(delegate ()
             {
                 Program.loggerW.Close();
@@ -103,8 +106,7 @@ namespace SharpBoy
 
         private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Program.emulatorThread = new System.Threading.Thread(() => Program.emulator.Start());
-            Program.emulatorThread.Start();
+            Program.emulator.Start();
         }
 
         private void MainWindow_Load(object sender, EventArgs e)

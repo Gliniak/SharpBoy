@@ -11,6 +11,8 @@ namespace SharpBoy
 {
     class CPU
     {
+        public Task cpuTask;
+
         private readonly double CPU_CLOCK = 1/(4.194304 * 1000000);
         private double CPU_CLOCK_MULTIPLY = 10.0;
 
@@ -177,11 +179,23 @@ namespace SharpBoy
 
         public void Start()
         {
-            do
+            cpuTask = Task.Run(() =>
             {
-                exe_ins();
-            } while (Program.emulator.isRunning);
-            
+                do
+                {
+                    if (Program.emulator.breakPointsList.Count != 0)
+                    {
+                        if (Program.emulator.breakPointsList.Contains(Program.emulator.getCPU().get_reg_pc()))
+                        {
+                            Program.emulator.isRunning = false;
+                           // Task.
+                        }
+                    }
+
+                    exe_ins();
+
+                } while (Program.emulator.isRunning);
+            });
             // Need to implement fast timer for RTC support!
             //Stopwatch timer = new Stopwatch();
 
