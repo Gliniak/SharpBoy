@@ -65,6 +65,7 @@
     <Compile Include="Emulator\Cartridge.cs" />
     <Compile Include="Emulator\CPU\cpu.cs" />
     <Compile Include="Emulator\CPU\Opcodes.cs" />
+    <Compile Include="Emulator\CPU\OpcodesCB.cs" />
     <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\Memory.cs" />
     <Compile Include="Emulator\Renderer.cs" />
@@ -124,7 +125,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

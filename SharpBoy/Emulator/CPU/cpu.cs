@@ -46,7 +46,6 @@ namespace SharpBoy
 
         // Special Paired Registers
         // AF, BC, DE, HL
-        // TODO: NOT REQUIRED! REMOVE SOON
         UInt16 reg_af;
         UInt16 reg_bc;
         UInt16 reg_de;
@@ -89,7 +88,6 @@ namespace SharpBoy
 
 
         // 16 bit registers access
-        // FIX THIS!
         public void set_reg_hl(UInt16 value)
         {
             Byte hi = (Byte)(value >> 8);
@@ -164,6 +162,17 @@ namespace SharpBoy
                 Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "UNKNOWN OPCODE OCCURED: " + String.Format("{0:X2}", op)
                     + " At Address: " + String.Format("{0:X4}", reg_pc));
 
+                set_reg_pc((UInt16)(get_reg_pc() + 1));
+                return;
+            }
+
+            // Special Execute for CB Opcodes
+            if((Opcodes.Opcode)op == Opcodes.Opcode.OPCODE_INTERNAL_CB)
+            {
+                set_reg_pc((UInt16)(get_reg_pc() + 1));
+                op = Program.emulator.GetMemory().ReadFromMemory(reg_pc);
+
+                OpcodesCB.ExecuteOpcodeCB((OpcodesCB.OpcodeCB)op);
                 set_reg_pc((UInt16)(get_reg_pc() + 1));
                 return;
             }

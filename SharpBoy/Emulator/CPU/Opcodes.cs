@@ -24,8 +24,11 @@ namespace SharpBoy
             OPCODE_LD_B_n = 0x06, // LOAD B, n
             OPCODE_LD_C_n = 0x0E, // LOAD C, n
             OPCODE_LD_A_B = 0x78, // LOAD A, B
+            OPCODE_LD_A_C = 0x79, // LOAD A, C
+            OPCODE_LD_C_A = 0x4F, // LOAD C, A
+
             OPCODE_LD_ADR_C_A = 0xE2, // LOAD $0xFF00+C, A
-            OPCODE_LD_A_HL = 0x2A, // LOAD A, HL+ (inc)
+            OPCODE_LD_A_HL_ADD = 0x2A, // LOAD A, HL+ (inc)
             OPCODE_LD_DE_A = 0x12, // LOAD DE, A
             OPCODE_LD_HL_n = 0x36, // LOAD HL, n
             OPCODE_LD_BC_nn = 0x01, // LOAD BC, nn
@@ -48,7 +51,42 @@ namespace SharpBoy
             OPCODE_CP_n = 0xFE,
             OPCODE_CALL_ADDRESS = 0xCD,
             OPCODE_RET = 0xC9, // RET
-            
+
+            OPCODE_LD_A_A = 0x7F, // Why this exist?
+            OPCODE_EI = 0xFB, // ENABLE INTERRUPTS
+            OPCODE_CPL_A = 0x2F, // Flip all bits in reg A
+            OPCODE_AND_A_n = 0xE6,
+
+            OPCODE_INTERNAL_CB = 0xCB, // IMPLEMENTED IN FILE OpcodesCB.cs
+
+            OPCODE_OR_B = 0xB0,
+            OPCODE_XOR_A_C = 0xA9, // XOR A, C
+            OPCODE_AND_A_C = 0xA1, // AND A, C
+            OPCODE_LD_HL_A = 0x77, // LD HL, A
+            OPCODE_INC_BC = 0x03,
+
+            OPCODE_PUSH_AF = 0xF5, // PUSH SP, AF THEN SP-2
+            OPCODE_PUSH_BC = 0xC5, // PUSH SP, BC THEN SP-2
+            OPCODE_PUSH_DE = 0xD5,
+            OPCODE_PUSH_HL = 0xE5,
+
+            OPCODE_LD_A_nn = 0xFA,
+
+            OPCODE_JR_Z = 0x28, // JR_FLAG_ZERO_RESET
+            OPCODE_AND_A_A = 0xA7,
+            OPCODE_DEC_HL = 0x35, 
+
+            OPCODE_LD_A_HL = 0x7E,
+
+            OPCODE_POP_HL = 0xE1,
+            OPCODE_POP_DE = 0xD1,
+            OPCODE_POP_BC = 0xC1,
+            OPCODE_POP_AF = 0xF1,
+
+            OPCODE_ADD_A_B = 0x80,
+
+            OPCODE_JP_Z_nn = 0xCA,
+            OPCODE_INC_L = 0x2C
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -72,8 +110,8 @@ namespace SharpBoy
             { Opcode.OPCODE_LD_HL_n, () => ld_hl_n_ins() },
             { Opcode.OPCODE_LD_nn_A, () => ld_nn_a_ins() },
             { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn_ins() },
-            { Opcode.OPCODE_LD_A_HL, () => ld_a_nn_ins() },
-            { Opcode.OPCODE_LD_ADR_C_A, () => ld_c_a_ins() },
+            { Opcode.OPCODE_LD_A_HL_ADD, () => ld_a_hl_add_ins() },
+            { Opcode.OPCODE_LD_ADR_C_A, () => ld_adr_c_a_ins() },
             { Opcode.OPCODE_INC_C, () => inc_c_ins() },
             { Opcode.OPCODE_CALL_ADDRESS, () => call_adr_ins() },
             { Opcode.OPCODE_LD_BC_nn, () => ld_bc_nn_ins() },
@@ -83,12 +121,396 @@ namespace SharpBoy
             { Opcode.OPCODE_RET, () => ret_ins() },
             { Opcode.OPCODE_LD_DE_A, () => ld_de_a_ins() },
             { Opcode.OPCODE_INC_DE, () => inc_de_ins() },
-            { Opcode.OPCODE_LD_DE_nn, () => ld_de_nn_ins() }
+            { Opcode.OPCODE_LD_DE_nn, () => ld_de_nn_ins() },
+            { Opcode.OPCODE_LD_A_A, () => ld_a_a_ins() },
+            { Opcode.OPCODE_CPL_A, () => cpl_a_ins() },
+            { Opcode.OPCODE_AND_A_n, () => and_a_n_ins() },
+            { Opcode.OPCODE_OR_B, () => or_a_b_ins() },
+            { Opcode.OPCODE_LD_C_A, () => ld_c_a_ins() },
+            { Opcode.OPCODE_XOR_A_C, () => xor_a_c_ins() },
+            { Opcode.OPCODE_AND_A_C, () => and_a_c_ins() },
+            { Opcode.OPCODE_LD_A_C, () => ld_a_c_ins() },
+            { Opcode.OPCODE_LD_HL_A, () => ld_hl_a_ins() },
+            { Opcode.OPCODE_INC_BC, () => inc_bc_ins() },
+            { Opcode.OPCODE_PUSH_AF, () => push_af_ins() },
+            { Opcode.OPCODE_PUSH_BC, () => push_bc_ins() },
+            { Opcode.OPCODE_PUSH_DE, () => push_de_ins() },
+            { Opcode.OPCODE_PUSH_HL, () => push_hl_ins() },
+            { Opcode.OPCODE_LD_A_nn, () => ld_a_nn_ins() },
+            { Opcode.OPCODE_JR_Z, () => jr_z_ins() },
+            { Opcode.OPCODE_AND_A_A, () => and_a_a_ins() },
+            { Opcode.OPCODE_DEC_HL, () => dec_hl_ins() },
+            { Opcode.OPCODE_LD_A_HL, () => ld_a_hl_ins() },
+            { Opcode.OPCODE_POP_HL, () => pop_hl_ins() },
+            { Opcode.OPCODE_POP_DE, () => pop_de_ins() },
+            { Opcode.OPCODE_POP_BC, () => pop_bc_ins() },
+            { Opcode.OPCODE_POP_AF, () => pop_af_ins() },
+            { Opcode.OPCODE_ADD_A_B, () => add_a_b_ins() },
+            { Opcode.OPCODE_JP_Z_nn, () => jp_z_nn_ins() },
+            { Opcode.OPCODE_INC_L, () => inc_l_ins() },
+
+            // Add to Dissasembler
+            { Opcode.OPCODE_EI, () => unimplemented_ins() },
+
         };
 
         public static void unimplemented_ins()
         {
             UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void inc_l_ins()
+        {
+            // ANY FLAGS?
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_l() + 1);
+            cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() + 1));
+            cpu.set_reg_l(value);
+            
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
+        }
+
+        public static void jp_z_nn_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            if (cpu.GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO))
+            {
+                Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+
+                UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+                // Why I need to Add 2?
+                cpu.set_reg_pc(value);
+                return;
+            }
+
+            cpu.set_reg_pc((UInt16)(address + 3));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JUMP (Z) NN INSTRUCTION EXECUTED");
+        }
+
+        public static void add_a_b_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            // Is This ok?
+            Byte carry = (Byte)(cpu.get_reg_a() ^ cpu.get_reg_b() ^ (cpu.get_reg_a() + cpu.get_reg_b()));
+            cpu.set_reg_a((Byte)(cpu.get_reg_a() + cpu.get_reg_b()));
+            
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, cpu.get_reg_a() == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, ((carry & 0x0100) != 0) ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, ((carry & 0x0010) != 0) ? true : false);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void pop_af_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.set_reg_f(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void pop_bc_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            cpu.set_reg_b(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.set_reg_c(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void pop_de_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            cpu.set_reg_d(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.set_reg_e(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void pop_hl_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            cpu.set_reg_h(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.set_reg_l(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_a_hl_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_hl()));
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void dec_hl_ins()
+        {
+            // ANY FLAGS?
+            UInt16 address = cpu.get_reg_pc();
+
+            UInt16 value = (UInt16)(cpu.get_reg_hl() - 1);
+            cpu.set_reg_hl(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            if (value == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
+        }
+
+        public static void and_a_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_a() & cpu.get_reg_a());
+            cpu.set_reg_a(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            if (value == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void jr_z_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            if (cpu.GetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO))
+            {
+                Byte add_pc = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+                // Why I need to Add 2?
+                cpu.set_reg_pc((UInt16)((address + (SByte)(add_pc)) + 2));
+                return;
+            }
+
+            cpu.set_reg_pc((UInt16)(address + 2));
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_Z INSTRUCTION EXECUTED");
+        }
+
+        public static void ld_a_nn_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            
+            // CANT WE JUST USE LOWER BYTE?
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+            UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+
+            cpu.set_reg_a((Byte)value);
+            cpu.set_reg_pc((UInt16)(address + 3));
+        }
+
+        public static void push_hl_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_h());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_l());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void push_de_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_d());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_e());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void push_bc_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_b());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_c());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void push_af_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_a());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_f());
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void inc_bc_ins()
+        {
+            // FLAGS?
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_bc((UInt16)(cpu.get_reg_bc() + 1));
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_hl_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_hl(cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+
+        public static void ld_a_c_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_a(cpu.get_reg_c());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void and_a_c_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_a() & cpu.get_reg_c());
+            cpu.set_reg_a(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            if (value == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void xor_a_c_ins()
+        {
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            Byte reg_a = cpu.get_reg_a();
+            Byte reg_c = cpu.get_reg_c();
+
+            cpu.set_reg_a(Convert.ToByte(reg_a ^ reg_c));
+
+            if (cpu.get_reg_a() == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc(Convert.ToUInt16(cpu.get_reg_pc() + 1));
+        }
+
+        public static void ld_c_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_c(cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void or_a_b_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            cpu.set_reg_a((Byte)(cpu.get_reg_a() | cpu.get_reg_b()));
+
+            if (cpu.get_reg_a() == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void and_a_n_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_a() & (Byte)(cpu.get_reg_pc()));
+            cpu.set_reg_a(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            if(value == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void cpl_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
+            cpu.set_reg_a((Byte)(~cpu.get_reg_a()));
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_a_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_a(cpu.get_reg_a()); // WHY?
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
@@ -196,14 +618,14 @@ namespace SharpBoy
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
-        public static void ld_c_a_ins()
+        public static void ld_adr_c_a_ins()
         {
             UInt16 address = cpu.get_reg_pc();
             Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + cpu.get_reg_c()), cpu.get_reg_a());
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
-        public static void ld_a_nn_ins()
+        public static void ld_a_hl_add_ins()
         {
             UInt16 address = cpu.get_reg_pc();
 
@@ -603,7 +1025,7 @@ namespace SharpBoy
                     address += 3;
                     break;
 
-                case Opcode.OPCODE_LD_A_HL:
+                case Opcode.OPCODE_LD_A_HL_ADD:
                     str_op = "LD A, HL+";
                     address += 1;
                     break;
@@ -677,6 +1099,142 @@ namespace SharpBoy
                     str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
                     address += 3;
                     break;
+
+                case Opcode.OPCODE_LD_A_A:
+                    str_op = "LD A, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_CPL_A:
+                    str_op = "CPL A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_AND_A_n:
+                    str_op = "AND A, ";
+                    address += 2;
+                    break;
+
+                case Opcode.OPCODE_OR_B:
+                    str_op = "OR A, B";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_C_A:
+                    str_op = "LD C, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_XOR_A_C:
+                    str_op = "XOR A, C";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_AND_A_C:
+                    str_op = "AND A, C";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_A_C:
+                    str_op = "LD A, C";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_HL_A:
+                    str_op = "LD HL, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_INC_BC:
+                    str_op = "INC BC";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_PUSH_AF:
+                    str_op = "PUSH SP, AF";
+                    address += 1;
+                    break;
+                case Opcode.OPCODE_PUSH_BC:
+                    str_op = "PUSH SP, BC";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_PUSH_DE:
+                    str_op = "PUSH SP, DE";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_PUSH_HL:
+                    str_op = "PUSH SP, HL";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_A_nn:
+                    str_op = "LD A, ";
+
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+
+                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    address += 3;
+                    break;
+
+
+                case Opcode.OPCODE_JR_Z:
+                    str_op = "JR Z, ";
+                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    str_op += String.Format("{0:X4}", Convert.ToUInt16(address + val1 + 2)) + "h";
+                    address += 2;
+                    break;
+
+                case Opcode.OPCODE_AND_A_A:
+                    str_op = "AND A, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_DEC_HL:
+                    str_op = "DEC HL";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_A_HL:
+                    str_op = "LD A, HL";
+                    address += 1;
+                    break;
+
+
+                case Opcode.OPCODE_POP_HL:
+                    str_op = "POP HL";
+                    address += 1;
+                    break;
+                case Opcode.OPCODE_POP_DE:
+                    str_op = "POP DE";
+                    address += 1;
+                    break;
+                case Opcode.OPCODE_POP_BC:
+                    str_op = "POP BC";
+                    address += 1;
+                    break;
+                case Opcode.OPCODE_POP_AF:
+                    str_op = "POP AF";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_ADD_A_B:
+                    str_op = "ADD A, B";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_JP_Z_nn:
+                    str_op = "JUMP (Z), NN";
+                    address += 3;
+                    break;
+
+                case Opcode.OPCODE_INC_L:
+                    str_op = "INC L";
+                    address += 1;
+                    break;
+
                 default:
                     str_op = "UNKNOWN";
                     address++;
