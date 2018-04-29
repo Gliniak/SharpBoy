@@ -25,13 +25,11 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Is this correct?
+            // Is this correct? (Nibble swap)
             Byte hi = (Byte)(cpu.get_reg_a() >> 4);
             cpu.set_reg_a((Byte)((cpu.get_reg_a() << 4) + hi));
 
-            if(cpu.get_reg_a() == 0)
-                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
-
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, cpu.get_reg_a() == 0 ? true : false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
@@ -47,8 +45,6 @@ namespace SharpBoy
 
         public static void ExecuteOpcodeCB(OpcodeCB opcode)
         {
-            
-
             if (opcodesCB[opcode] != null)
                 opcodesCB[opcode].Invoke();
             else
@@ -71,7 +67,7 @@ namespace SharpBoy
                     break;
 
                 default:
-                    address += 2;
+                    address += 1;
                     break;
             }
             return str_op;

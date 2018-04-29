@@ -8,7 +8,6 @@ namespace SharpBoy
 {
     class Opcodes
     {
-        // MAY CAUSE ERRORS?
         private static CPU cpu = Program.emulator.getCPU();
 
         public enum Opcode : Byte
@@ -16,10 +15,13 @@ namespace SharpBoy
             OPCODE_NOP = 0x00,
 
             OPCODE_INC_C = 0x0C, // INC C
+            OPCODE_INC_L = 0x2C,
+            OPCODE_INC_BC = 0x03,
             OPCODE_INC_DE = 0x13,
             OPCODE_DEC_B = 0x05, // DEC B
             OPCODE_DEC_C = 0x0D, // DEC C
             OPCODE_DEC_BC = 0x0B, // DEC BC
+            OPCODE_DEC_HL = 0x35,
             OPCODE_LD_A_n = 0x3E, // LOAD A, n
             OPCODE_LD_B_n = 0x06, // LOAD B, n
             OPCODE_LD_C_n = 0x0E, // LOAD C, n
@@ -27,56 +29,52 @@ namespace SharpBoy
             OPCODE_LD_A_C = 0x79, // LOAD A, C
             OPCODE_LD_C_A = 0x4F, // LOAD C, A
 
+            OPCODE_LD_A_nn = 0xFA,
+            OPCODE_LD_A_A = 0x7F, // Why this exist?
+            OPCODE_LD_B_A = 0x47,
             OPCODE_LD_ADR_C_A = 0xE2, // LOAD $0xFF00+C, A
+            OPCODE_LD_A_HL = 0x7E,
             OPCODE_LD_A_HL_ADD = 0x2A, // LOAD A, HL+ (inc)
             OPCODE_LD_DE_A = 0x12, // LOAD DE, A
             OPCODE_LD_HL_n = 0x36, // LOAD HL, n
             OPCODE_LD_BC_nn = 0x01, // LOAD BC, nn
             OPCODE_LD_DE_nn = 0x11,
             OPCODE_LD_HL_nn = 0x21, // LOAD HL, nn
+            OPCODE_LD_HL_A = 0x77, // LD HL, A
             OPCODE_LD_SP_nn = 0x31, // LOAD SP, nn (SP <- nn)
             OPCODE_LD_nn_A = 0xEA, // LOAD [$xxxx], A
             OPCODE_LDD_HL = 0x32, // LOAD DEC HL, A - Set A in HL and decrease value by 1
             OPCODE_LDH_N_A = 0xE0, // LOAD A to $FF00+n
             OPCODE_LHD_A_N = 0xF0, // LOAD $FF00+n to A
-
+            OPCODE_LD_HLI_A = 0x22,
 
             // OTHER OPCODES
-            OPCODE_OR_A_C = 0xB1, // OR C
-            OPCODE_XOR = 0xAF, // XOR reg_a
-            OPCODE_JR_NZ = 0x20, // JR_FLAG_ZERO_RESET
             OPCODE_JMP = 0xC3,
             OPCODE_DI = 0xF3, // DI - Disable Interrupts
             OPCODE_RRCA = 0x0F, // Rotate A Right
             OPCODE_CP_n = 0xFE,
-            OPCODE_CALL_ADDRESS = 0xCD,
-            OPCODE_RET = 0xC9, // RET
-
-            OPCODE_LD_A_A = 0x7F, // Why this exist?
             OPCODE_EI = 0xFB, // ENABLE INTERRUPTS
             OPCODE_CPL_A = 0x2F, // Flip all bits in reg A
-            OPCODE_AND_A_n = 0xE6,
 
             OPCODE_INTERNAL_CB = 0xCB, // IMPLEMENTED IN FILE OpcodesCB.cs
 
             OPCODE_OR_B = 0xB0,
+            OPCODE_OR_A_C = 0xB1, // OR C
+            OPCODE_XOR = 0xAF, // XOR A, A
             OPCODE_XOR_A_C = 0xA9, // XOR A, C
+            OPCODE_AND_A_A = 0xA7,
             OPCODE_AND_A_C = 0xA1, // AND A, C
-            OPCODE_LD_HL_A = 0x77, // LD HL, A
-            OPCODE_INC_BC = 0x03,
+            OPCODE_AND_A_n = 0xE6,
+
+            OPCODE_JR_Z = 0x28, // JR_FLAG_ZERO_RESET
+            OPCODE_JP_Z_nn = 0xCA,
+            OPCODE_JR_NZ = 0x20, // JR_FLAG_ZERO_RESET
+            OPCODE_JP_NZ_cc = 0xC2,
 
             OPCODE_PUSH_AF = 0xF5, // PUSH SP, AF THEN SP-2
             OPCODE_PUSH_BC = 0xC5, // PUSH SP, BC THEN SP-2
             OPCODE_PUSH_DE = 0xD5,
             OPCODE_PUSH_HL = 0xE5,
-
-            OPCODE_LD_A_nn = 0xFA,
-
-            OPCODE_JR_Z = 0x28, // JR_FLAG_ZERO_RESET
-            OPCODE_AND_A_A = 0xA7,
-            OPCODE_DEC_HL = 0x35, 
-
-            OPCODE_LD_A_HL = 0x7E,
 
             OPCODE_POP_HL = 0xE1,
             OPCODE_POP_DE = 0xD1,
@@ -84,9 +82,20 @@ namespace SharpBoy
             OPCODE_POP_AF = 0xF1,
 
             OPCODE_ADD_A_B = 0x80,
+            OPCODE_ADD_A_A = 0x87,
 
-            OPCODE_JP_Z_nn = 0xCA,
-            OPCODE_INC_L = 0x2C
+            OPCODE_CALL_ADDRESS = 0xCD,
+            OPCODE_RET = 0xC9,
+            OPCODE_RET_NC = 0xD0,
+            OPCODE_RST_28H = 0xEF,
+
+            OPCODE_SP_HL = 0xF9,
+            // TO DO!
+
+            //OPCODE_CP_A_A = 0xBF, // COMPARE A, A
+            //OPCODE_CCF = 0x3F, // CARRY FLAG
+
+
         }
 
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
@@ -148,6 +157,13 @@ namespace SharpBoy
             { Opcode.OPCODE_ADD_A_B, () => add_a_b_ins() },
             { Opcode.OPCODE_JP_Z_nn, () => jp_z_nn_ins() },
             { Opcode.OPCODE_INC_L, () => inc_l_ins() },
+            { Opcode.OPCODE_ADD_A_A, () => add_a_a_ins() },
+            { Opcode.OPCODE_RET_NC, () => ret_nc_ins() },
+            { Opcode.OPCODE_LD_HLI_A, () => ld_hli_a_ins() },
+            { Opcode.OPCODE_RST_28H, () => rst_28h_ins() },
+            { Opcode.OPCODE_JP_NZ_cc, () => jp_nz_cc_ins() },
+            { Opcode.OPCODE_SP_HL, () => sp_hl_ins() },
+            { Opcode.OPCODE_LD_B_A, () => ld_b_a_ins() },
 
             // Add to Dissasembler
             { Opcode.OPCODE_EI, () => unimplemented_ins() },
@@ -160,6 +176,89 @@ namespace SharpBoy
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
+        public static void ld_b_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_b(cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void sp_hl_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.StackPush(cpu.get_reg_hl());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+
+        public static void jp_nz_cc_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            if(!cpu.HaveFlagZero())
+            {
+                Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+
+                UInt16 value = Convert.ToUInt16((hi << 8) + lo);
+                // Why I need to Add 2?
+                cpu.set_reg_pc(value);
+                return;
+            }
+
+            cpu.set_reg_pc((UInt16)(address + 3));
+        }
+
+        public static void rst_28h_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.StackPush(cpu.get_reg_pc());
+            cpu.set_reg_pc(0x0028);
+        }
+
+        public static void ld_hli_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.set_reg_hl(cpu.get_reg_a());
+            cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() + 1));
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ret_nc_ins()
+        {
+            if (cpu.HaveFlagCarry())
+            {
+                cpu.set_reg_pc((UInt16)(cpu.get_reg_pc() + 1));
+                return;
+            }
+
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.StackPop(ref address);
+            cpu.set_reg_pc(address);
+        }
+
+        public static void add_a_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            UInt16 value = (UInt16)(cpu.get_reg_a() + cpu.get_reg_a());
+
+            // Is This ok?
+            Byte carry = (Byte)((cpu.get_reg_a() ^ cpu.get_reg_a()) ^ value);
+            cpu.set_reg_a((Byte)(value));
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, cpu.get_reg_a() == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, ((carry & 0x0100) != 0) ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, ((carry & 0x0010) != 0) ? true : false);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
         public static void inc_l_ins()
         {
             // ANY FLAGS?
@@ -169,7 +268,6 @@ namespace SharpBoy
             cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() + 1));
             cpu.set_reg_l(value);
             
-
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
 
             if ((value & 0x0F) == 0x0F)
@@ -178,7 +276,7 @@ namespace SharpBoy
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
         }
 
         public static void jp_z_nn_ins()
@@ -197,7 +295,7 @@ namespace SharpBoy
             }
 
             cpu.set_reg_pc((UInt16)(address + 3));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JUMP (Z) NN INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JUMP (Z) NN INSTRUCTION EXECUTED");
         }
 
         public static void add_a_b_ins()
@@ -292,7 +390,7 @@ namespace SharpBoy
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
         }
 
         public static void and_a_a_ins()
@@ -327,7 +425,7 @@ namespace SharpBoy
             }
 
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_Z INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_Z INSTRUCTION EXECUTED");
         }
 
         public static void ld_a_nn_ins()
@@ -543,9 +641,16 @@ namespace SharpBoy
 
         public static void ret_ins()
         {
-            // Is it correct?
-            cpu.set_reg_pc(cpu.get_reg_sp());
-            cpu.set_reg_pc((UInt16)(cpu.get_reg_pc() + 1));
+            UInt16 address = cpu.get_reg_pc();
+
+            // Better Way for this!
+            Byte lo = Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0];
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            Byte hi = Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0];
+            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+
+            cpu.set_reg_pc((UInt16)(hi << 8 | lo));
+            //cpu.set_reg_pc((UInt16)(address + 1));
         }
 
         public static void or_a_c_ins()
@@ -582,7 +687,7 @@ namespace SharpBoy
             cpu.set_reg_bc(value);
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC BC INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC BC INSTRUCTION EXECUTED");
         }
 
         public static void ld_bc_nn_ins()
@@ -601,7 +706,7 @@ namespace SharpBoy
         public static void call_adr_ins()
         {
             UInt16 address = cpu.get_reg_pc();
-            cpu.set_reg_sp((UInt16)(address + 3));
+            cpu.StackPush((UInt16)(address+3));
 
             Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
             Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
@@ -674,7 +779,6 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
             
-
             Byte value = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
@@ -685,8 +789,11 @@ namespace SharpBoy
             if (cpu.get_reg_a() < value)
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
 
+            if(((cpu.get_reg_a() - value) & 0x0F) > (cpu.get_reg_a() & 0x0F))
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "CP A, n INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "CP A, n INSTRUCTION EXECUTED");
         }
 
         public static void rrca_ins()
@@ -703,7 +810,7 @@ namespace SharpBoy
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "RRCA INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "RRCA INSTRUCTION EXECUTED");
         }
 
 
@@ -714,7 +821,7 @@ namespace SharpBoy
 
             cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory((UInt16)(0xFF00 + value)));
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH A, [$FF00+n] INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH A, [$FF00+n] INSTRUCTION EXECUTED");
         }
 
         public static void ldh_n_a_ins()
@@ -724,7 +831,7 @@ namespace SharpBoy
 
             Program.emulator.GetMemory().WriteToMemory((UInt16)(0xFF00 + value), cpu.get_reg_a());
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH [$FF00+n],A INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LDH [$FF00+n],A INSTRUCTION EXECUTED");
         }
 
         public static void di_ins()
@@ -741,7 +848,7 @@ namespace SharpBoy
 
             cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD A,n INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD A,n INSTRUCTION EXECUTED");
         }
 
         public static void jr_nz_ins()
@@ -752,19 +859,18 @@ namespace SharpBoy
             {
                 Byte add_pc = Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                // Why I need to Add 2?
                 cpu.set_reg_pc((UInt16)((address + (SByte)(add_pc)) + 2));
                 return;
             }
 
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_NZ INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JR_NZ INSTRUCTION EXECUTED");
         }
 
         public static void nop_instruction()
         {
             cpu.set_reg_pc(Convert.ToUInt16(cpu.get_reg_pc() + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "NOP INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "NOP INSTRUCTION EXECUTED");
         }
 
         public static void jmp_instruction()
@@ -776,25 +882,24 @@ namespace SharpBoy
 
             UInt16 newAddress = Convert.ToUInt16((hi << 8) + lo);
 
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JMP INSTRUCTION EXECUTED AT ADDRESS: " + address.ToString() + " TO ADDRESS: " + newAddress.ToString());
+           // Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "JMP INSTRUCTION EXECUTED AT ADDRESS: " + address.ToString() + " TO ADDRESS: " + newAddress.ToString());
             cpu.set_reg_pc(newAddress);
         }
 
         public static void xor_a_ins()
         {
-            
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
 
             Byte reg_a = cpu.get_reg_a();
-            cpu.set_reg_a(Convert.ToByte(reg_a ^ reg_a));
+            cpu.set_reg_a((Byte)(reg_a ^ reg_a));
 
             if (cpu.get_reg_a() == 0)
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
 
-            cpu.set_reg_pc(Convert.ToUInt16(cpu.get_reg_pc() + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "XOR_A INSTRUCTION EXECUTED");
+            cpu.set_reg_pc((UInt16)(cpu.get_reg_pc() + 1));
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "XOR_A INSTRUCTION EXECUTED");
         }
 
         public static void ld_hl_nn_ins()
@@ -808,7 +913,7 @@ namespace SharpBoy
 
             cpu.set_reg_hl(value);
             cpu.set_reg_pc((UInt16)(address + 3));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL INSTRUCTION EXECUTED");
         }
 
 
@@ -818,7 +923,7 @@ namespace SharpBoy
 
             cpu.set_reg_c(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD C INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD C INSTRUCTION EXECUTED");
         }
 
         public static void ld_b_ins()
@@ -827,20 +932,18 @@ namespace SharpBoy
 
             cpu.set_reg_b(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
             cpu.set_reg_pc((UInt16)(address + 2));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD B INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD B INSTRUCTION EXECUTED");
         }
 
         public static void ldd_hl_ins()
         {
             UInt16 address = cpu.get_reg_pc();
 
-            cpu.set_reg_l((Byte)(cpu.get_reg_a() - 1));
-
-            cpu.set_reg_hl(Convert.ToUInt16(cpu.get_reg_a()));
-            cpu.set_reg_hl((UInt16)Convert.ToInt16(cpu.get_reg_hl() - 1));
+            cpu.set_reg_hl((UInt16)(cpu.get_reg_a()));
+            cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() - 1));
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL, A DEC A INSTRUCTION EXECUTED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL, A DEC A INSTRUCTION EXECUTED");
         }
 
         public static void dec_b_ins()
@@ -849,12 +952,16 @@ namespace SharpBoy
 
             Byte value = (Byte)(cpu.get_reg_b() - 1);
 
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, cpu.HaveFlagCarry() ? true : false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
             cpu.set_reg_b(value);
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC B INSTRUCTION EXECUTED");
         }
 
         public static void dec_c_ins()
@@ -863,7 +970,8 @@ namespace SharpBoy
 
             Byte value = (Byte)(cpu.get_reg_c() - 1);
 
-            // TODO: NEED TO ADD HALF-CARRY FLAG
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, cpu.HaveFlagCarry() ? true : false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
@@ -873,7 +981,6 @@ namespace SharpBoy
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC C INSTRUCTION EXECUTED");
         }
 
 
@@ -1232,6 +1339,26 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_INC_L:
                     str_op = "INC L";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_ADD_A_A:
+                    str_op = "ADD A, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_RET_NC:
+                    str_op = "RET NC";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_HLI_A:
+                    str_op = "LD HLI, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_RST_28H:
+                    str_op = "RST 28H";
                     address += 1;
                     break;
 

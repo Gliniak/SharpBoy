@@ -27,12 +27,11 @@ namespace SharpBoy
         // I need to have access to GL from inside the Emulator not GUI code
         private void OpenGLKeyPressed(object sender, KeyEventArgs args)
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL KEY");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "OPEN GL KEY");
         }
 
         private void OpenGLResize(object sender, EventArgs args)
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL RESIZE");
             openGLControl.Size = Size;
             GL.Viewport(Size);
         }
@@ -52,7 +51,7 @@ namespace SharpBoy
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Clear Everything Before Exiting!
+            // TODO: Clear Everything Before Exiting!
 
 
             Application.Exit();
