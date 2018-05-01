@@ -60,7 +60,10 @@ namespace SharpBoy
             lv_dissassembly.Columns.Add("Opcode", 70);
             lv_dissassembly.Columns.Add("Instruction", 200);
 
-            for (UInt16 i = Convert.ToUInt16(i_address - 0x0020); i < Convert.ToUInt16(i_address + 0x0020);)
+            Byte lo_val = (i_address < 0x00FF) ? (Byte)(i_address) : (Byte)(0xFF);
+            Byte hi_val = (i_address + 0x00FF > 0xFFFF) ? (Byte)(0xFFFF - i_address) : (Byte)(0xFF);
+
+            for (UInt16 i = Convert.ToUInt16(lo_val); i < Convert.ToUInt16(hi_val);)
             {
                 Byte opcode = Program.emulator.GetMemory().ReadFromMemory(i);
                 String address = String.Format("{0:X4}", i);
@@ -68,7 +71,14 @@ namespace SharpBoy
 
                 ListViewItem item = new ListViewItem(address);
                 item.SubItems.Add(value);
-                item.SubItems.Add(Opcodes.GetOpcode((Opcodes.Opcode)opcode, ref i));
+
+                if((Opcodes.Opcode)opcode == Opcodes.Opcode.OPCODE_INTERNAL_CB)
+                {
+                    opcode = Program.emulator.GetMemory().ReadFromMemory(++i);
+                    item.SubItems.Add(OpcodesCB.GetOpcodeCB((OpcodesCB.OpcodeCB)opcode, ref i));
+                }
+                else item.SubItems.Add(Opcodes.GetOpcode((Opcodes.Opcode)opcode, ref i));
+
                 lv_dissassembly.Items.Add(item);
             }
 
@@ -179,6 +189,16 @@ namespace SharpBoy
         {
             lv_windowLoadData(Program.emulator.getCPU().get_reg_pc());
             cpu_regs_update_in_window();
+        }
+
+        private void tb_reg_b_MouseDown(object sender, MouseEventArgs e)
+        {
+            Program.emulator.getCPU().set_reg_b(0x01);
+        }
+
+        private void tb_reg_c_MouseDown(object sender, MouseEventArgs e)
+        {
+            Program.emulator.getCPU().set_reg_c(0x01);
         }
     }
 }

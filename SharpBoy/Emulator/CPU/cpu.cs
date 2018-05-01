@@ -60,12 +60,12 @@ namespace SharpBoy
 
         // 16 bit registers
         UInt16 reg_sp = 0xFFFE;
-        UInt16 reg_pc = 0x0100; // Start program location nop instruction in rom and jump instruction
+        UInt16 reg_pc = 0x0000; // Start program location nop instruction in rom and jump instruction
 
-        public SixteenBitRegister getRegister_af() { return reg_af; }
-        public SixteenBitRegister getRegister_bc() { return reg_bc; }
-        public SixteenBitRegister getRegister_de() { return reg_de; }
-        public SixteenBitRegister getRegister_hl() { return reg_hl; }
+        public ref SixteenBitRegister getRegister_af() { return ref reg_af; }
+        public ref SixteenBitRegister getRegister_bc() { return ref reg_bc; }
+        public ref SixteenBitRegister getRegister_de() { return ref reg_de; }
+        public ref SixteenBitRegister getRegister_hl() { return ref reg_hl; }
 
         public void StackPush(SixteenBitRegister register)
         {

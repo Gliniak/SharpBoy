@@ -67,9 +67,9 @@
             this.tb_goto_address = new System.Windows.Forms.TextBox();
             this.b_goto_address = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.tb_breakpointAdr = new System.Windows.Forms.TextBox();
-            this.lb_breakpoints = new System.Windows.Forms.ListBox();
             this.bt_addBreakpoint = new System.Windows.Forms.Button();
+            this.lb_breakpoints = new System.Windows.Forms.ListBox();
+            this.tb_breakpointAdr = new System.Windows.Forms.TextBox();
             this.btn_start = new System.Windows.Forms.Button();
             this.btn_refresh = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
@@ -274,6 +274,7 @@
             this.tb_reg_c.Name = "tb_reg_c";
             this.tb_reg_c.Size = new System.Drawing.Size(126, 20);
             this.tb_reg_c.TabIndex = 11;
+            this.tb_reg_c.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tb_reg_c_MouseDown);
             // 
             // label6
             // 
@@ -290,6 +291,7 @@
             this.tb_reg_b.Name = "tb_reg_b";
             this.tb_reg_b.Size = new System.Drawing.Size(126, 20);
             this.tb_reg_b.TabIndex = 9;
+            this.tb_reg_b.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tb_reg_b_MouseDown);
             // 
             // label5
             // 
@@ -440,21 +442,6 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Breakpoints";
             // 
-            // tb_breakpointAdr
-            // 
-            this.tb_breakpointAdr.Location = new System.Drawing.Point(7, 24);
-            this.tb_breakpointAdr.Name = "tb_breakpointAdr";
-            this.tb_breakpointAdr.Size = new System.Drawing.Size(92, 20);
-            this.tb_breakpointAdr.TabIndex = 0;
-            // 
-            // lb_breakpoints
-            // 
-            this.lb_breakpoints.FormattingEnabled = true;
-            this.lb_breakpoints.Location = new System.Drawing.Point(7, 51);
-            this.lb_breakpoints.Name = "lb_breakpoints";
-            this.lb_breakpoints.Size = new System.Drawing.Size(170, 173);
-            this.lb_breakpoints.TabIndex = 1;
-            // 
             // bt_addBreakpoint
             // 
             this.bt_addBreakpoint.Location = new System.Drawing.Point(106, 24);
@@ -464,6 +451,21 @@
             this.bt_addBreakpoint.Text = "Add";
             this.bt_addBreakpoint.UseVisualStyleBackColor = true;
             this.bt_addBreakpoint.Click += new System.EventHandler(this.bt_addBreakpoint_Click);
+            // 
+            // lb_breakpoints
+            // 
+            this.lb_breakpoints.FormattingEnabled = true;
+            this.lb_breakpoints.Location = new System.Drawing.Point(7, 51);
+            this.lb_breakpoints.Name = "lb_breakpoints";
+            this.lb_breakpoints.Size = new System.Drawing.Size(170, 173);
+            this.lb_breakpoints.TabIndex = 1;
+            // 
+            // tb_breakpointAdr
+            // 
+            this.tb_breakpointAdr.Location = new System.Drawing.Point(7, 24);
+            this.tb_breakpointAdr.Name = "tb_breakpointAdr";
+            this.tb_breakpointAdr.Size = new System.Drawing.Size(92, 20);
+            this.tb_breakpointAdr.TabIndex = 0;
             // 
             // btn_start
             // 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,7 @@ namespace SharpBoy
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Initializing...");
             memory.InitializeMemory();
 
+            LoadBios(Directory.GetCurrentDirectory() + "/bios.gb");
             return true;
         }
 
@@ -34,6 +36,11 @@ namespace SharpBoy
         {
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
             isRunning = true;
+
+            Boolean isLoaded = cart.IsCartridgeLoaded();
+
+            if (isLoaded)
+                cpu.set_reg_pc(0x0100);
 
             cpu.Start();
         }
@@ -48,6 +55,21 @@ namespace SharpBoy
         public void LoadCartridge(String path)
         {
             cart.LoadCartridge(path);
+        }
+
+        public void LoadBios(String filepath)
+        {
+            FileStream file = File.OpenRead(filepath);
+
+            if (file == null)
+                return;
+
+            byte[] data = new byte[0xFF];
+            file.Seek(0x0000, SeekOrigin.Begin);
+
+            // Loading data
+            file.Read(data, 0, 0xFF);
+            memory.WriteToMemory(0x0000, data, (UInt16)data.Length);
         }
 
         public Memory GetMemory() { return memory; }

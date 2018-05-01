@@ -63,7 +63,7 @@ namespace SharpBoy
             CGB_FLAG_COLOR_ONLY = 0xC0
         };
 
-
+        public bool IsCartridgeLoaded() { return Program.emulator.GetMemory().ReadFromMemory((UInt16)cartridgeAddress.CARTRIDGE_ADDRESS_BEGIN + 1) == 0xC3; }
 
         public String GetGameTitle() { return Encoding.Default.GetString(Program.emulator.GetMemory().ReadFromMemory((UInt16)cartridgeAddress.CARTRIDGE_TITLE, 0x0F)); }
         public CGB_Flag GetCGB_Flag() { return (CGB_Flag)Program.emulator.GetMemory().ReadFromMemory((UInt16)cartridgeAddress.CARTRIDGE_COLOR_FLAG); }

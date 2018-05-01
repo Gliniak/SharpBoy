@@ -40,7 +40,7 @@ namespace SharpBoy
             OPCODE_LD_BC_nn = 0x01, // LOAD BC, nn
             OPCODE_LD_DE_nn = 0x11,
             OPCODE_LD_HL_nn = 0x21, // LOAD HL, nn
-            OPCODE_LD_HL_A = 0x77, // LD HL, A
+            OPCODE_LD_ADR_HL_A = 0x77, // LD HL, A
             OPCODE_LD_SP_nn = 0x31, // LOAD SP, nn (SP <- nn)
             OPCODE_LD_nn_A = 0xEA, // LOAD [$xxxx], A
             OPCODE_LDD_HL = 0x32, // LOAD DEC HL, A - Set A in HL and decrease value by 1
@@ -90,6 +90,17 @@ namespace SharpBoy
             OPCODE_RST_28H = 0xEF,
 
             OPCODE_SP_HL = 0xF9,
+            OPCODE_LD_A_DE = 0x1A,
+            OPCODE_INC_HL = 0x23,
+
+            OPCODE_RL_A_CF = 0x17, // Rotate left register A carry flag
+            OPCODE_LD_A_E = 0x7B,
+            OPCODE_DEC_A = 0x3D,
+            OPCODE_LD_HL_A = 0x67,
+            OPCODE_LD_D_A = 0x57,
+
+            OPCODE_INC_B = 0x04,
+            OPCODE_LD_E_n = 0x1E,
             // TO DO!
 
             //OPCODE_CP_A_A = 0xBF, // COMPARE A, A
@@ -139,7 +150,7 @@ namespace SharpBoy
             { Opcode.OPCODE_XOR_A_C, () => xor_a_c_ins() },
             { Opcode.OPCODE_AND_A_C, () => and_a_c_ins() },
             { Opcode.OPCODE_LD_A_C, () => ld_a_c_ins() },
-            { Opcode.OPCODE_LD_HL_A, () => ld_hl_a_ins() },
+            { Opcode.OPCODE_LD_ADR_HL_A, () => ld_adr_hl_a_ins() },
             { Opcode.OPCODE_INC_BC, () => inc_bc_ins() },
             { Opcode.OPCODE_PUSH_AF, () => push_af_ins() },
             { Opcode.OPCODE_PUSH_BC, () => push_bc_ins() },
@@ -164,6 +175,16 @@ namespace SharpBoy
             { Opcode.OPCODE_JP_NZ_cc, () => jp_nz_cc_ins() },
             { Opcode.OPCODE_SP_HL, () => sp_hl_ins() },
             { Opcode.OPCODE_LD_B_A, () => ld_b_a_ins() },
+            { Opcode.OPCODE_LD_A_DE, () => ld_a_de_ins() },
+            { Opcode.OPCODE_INC_HL, () => inc_hl_ins() },
+            { Opcode.OPCODE_RL_A_CF, () => rl_a_cf_ins() },
+            { Opcode.OPCODE_LD_A_E, () => ld_a_e_ins() },
+            { Opcode.OPCODE_DEC_A, () => dec_a_ins() },
+            { Opcode.OPCODE_LD_HL_A, () => ld_hl_a_ins() },
+            { Opcode.OPCODE_LD_D_A, () => ld_d_a_ins() },
+            { Opcode.OPCODE_INC_B, () => inc_b_ins() },
+            { Opcode.OPCODE_LD_E_n, () => ld_e_n_ins() },
+
 
             // Add to Dissasembler
             { Opcode.OPCODE_EI, () => unimplemented_ins() },
@@ -173,6 +194,112 @@ namespace SharpBoy
         public static void unimplemented_ins()
         {
             UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_e_n_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_e(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD A,n INSTRUCTION EXECUTED");
+        }
+
+        public static void inc_b_ins()
+        {
+            // TODO: FLAGS
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_b() + 1);
+            cpu.set_reg_b(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_d_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_d(cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_hl_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_hl(cpu.get_reg_a());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void dec_a_ins()
+        {
+            // ANY FLAGS?
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_a() - 1);
+            cpu.set_reg_a(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            if (value == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
+        }
+
+
+        public static void ld_a_e_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_a(cpu.get_reg_e());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void rl_a_cf_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte carry = cpu.HaveFlagCarry() ? (Byte)(1) : (Byte)(0); // WHY THOU?
+            Byte value = cpu.get_reg_a();
+
+            // Clear all flags
+            cpu.ResetFlags();
+
+            if ((value & 0x80) != 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
+
+            value <<= 1;
+            value |= carry;
+            cpu.set_reg_a(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void inc_hl_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() + 1));
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_a_de_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            // Is it ok? Shouldn't it load pointer value?
+            //cpu.set_reg_a(cpu.get_reg_e());
+            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_de()));
+
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
@@ -221,7 +348,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            cpu.set_reg_hl(cpu.get_reg_a());
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_hl(), cpu.get_reg_a());
             cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() + 1));
 
             cpu.set_reg_pc((UInt16)(address + 1));
@@ -317,11 +444,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            cpu.set_reg_a(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
-            cpu.set_reg_f(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.StackPop(ref cpu.getRegister_af());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -330,11 +453,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            cpu.set_reg_b(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
-            cpu.set_reg_c(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.StackPop(ref cpu.getRegister_bc());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -343,11 +462,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            cpu.set_reg_d(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
-            cpu.set_reg_e(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.StackPop(ref cpu.getRegister_de());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -356,11 +471,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            cpu.set_reg_h(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
-            cpu.set_reg_l(Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_sp(), 1)[0]);
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() + 1));
+            cpu.StackPop(ref cpu.getRegister_hl());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -446,11 +557,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_h());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
-            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_l());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            cpu.StackPush(cpu.get_reg_hl());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -459,11 +566,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_d());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
-            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_e());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            cpu.StackPush(cpu.get_reg_de());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -472,11 +575,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_b());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
-            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_c());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            cpu.StackPush(cpu.get_reg_bc());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -485,11 +584,7 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            // Better Way for this!
-            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_sp(), cpu.get_reg_a());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
-            Program.emulator.GetMemory().WriteToMemory((UInt16)(cpu.get_reg_sp() + 1), cpu.get_reg_f());
-            cpu.set_reg_sp((UInt16)(cpu.get_reg_sp() - 1));
+            cpu.StackPush(cpu.get_reg_af());
 
             cpu.set_reg_pc((UInt16)(address + 1));
         }
@@ -498,14 +593,18 @@ namespace SharpBoy
         {
             // FLAGS?
             UInt16 address = cpu.get_reg_pc();
+
+
+
             cpu.set_reg_bc((UInt16)(cpu.get_reg_bc() + 1));
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
-        public static void ld_hl_a_ins()
+
+        public static void ld_adr_hl_a_ins()
         {
             UInt16 address = cpu.get_reg_pc();
-            cpu.set_reg_hl(cpu.get_reg_a());
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_hl(), cpu.get_reg_a());
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
@@ -719,7 +818,17 @@ namespace SharpBoy
         {
             // TODO: FLAGS
             UInt16 address = cpu.get_reg_pc();
-            cpu.set_reg_c((Byte)(cpu.get_reg_c() + 1));
+
+            Byte value = (Byte)(cpu.get_reg_c() + 1);
+            cpu.set_reg_c(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
@@ -939,7 +1048,8 @@ namespace SharpBoy
         {
             UInt16 address = cpu.get_reg_pc();
 
-            cpu.set_reg_hl((UInt16)(cpu.get_reg_a()));
+            //cpu.set_reg_hl((UInt16)(cpu.get_reg_a()));
+            Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_hl(), cpu.get_reg_a());
             cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() - 1));
 
             cpu.set_reg_pc((UInt16)(address + 1));
@@ -1247,8 +1357,8 @@ namespace SharpBoy
                     address += 1;
                     break;
 
-                case Opcode.OPCODE_LD_HL_A:
-                    str_op = "LD HL, A";
+                case Opcode.OPCODE_LD_ADR_HL_A:
+                    str_op = "LD [HL], A";
                     address += 1;
                     break;
 
@@ -1359,6 +1469,55 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_RST_28H:
                     str_op = "RST 28H";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_A_DE:
+                    str_op = "LD A, DE";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_INC_HL:
+                    str_op = "INC HL";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_RL_A_CF:
+                    str_op = "RL A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_A_E:
+                    str_op = "LD A, E";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_DEC_A:
+                    str_op = "DEC A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_HL_A:
+                    str_op = "LD HL, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_D_A:
+                    str_op = "LD D, A";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_INC_B:
+                    str_op = "INC B";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_E_n:
+                    str_op = "LD E, n";
+                    address += 2;
+                    break;
+
+                case Opcode.OPCODE_INTERNAL_CB:
                     address += 1;
                     break;
 
