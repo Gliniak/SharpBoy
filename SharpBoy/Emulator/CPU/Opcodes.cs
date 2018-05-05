@@ -6,6 +6,27 @@ using System.Threading.Tasks;
 
 namespace SharpBoy
 {
+    // My second idea how to wrote it
+
+    /*
+    class Opcode
+    {
+        private Opcodes.Opcode opcode;
+        private Byte cycleTime;
+
+        private Action executedFunction;
+
+        public Opcode() { }
+        public Opcode(Opcodes.Opcode op, Byte cycles, Action func)
+        {
+            opcode = op;
+            cycleTime = cycles;
+            executedFunction = func;
+        }
+
+        public void Execute() { executedFunction.Invoke(); }
+    }
+    */
     class Opcodes
     {
         private static CPU cpu = Program.emulator.getCPU();
@@ -16,10 +37,13 @@ namespace SharpBoy
 
             OPCODE_INC_C = 0x0C, // INC C
             OPCODE_INC_L = 0x2C,
+            OPCODE_INC_H = 0x24,
             OPCODE_INC_BC = 0x03,
             OPCODE_INC_DE = 0x13,
             OPCODE_DEC_B = 0x05, // DEC B
             OPCODE_DEC_C = 0x0D, // DEC C
+            OPCODE_DEC_E = 0x1D, // DEC E
+
             OPCODE_DEC_BC = 0x0B, // DEC BC
             OPCODE_DEC_HL = 0x35,
             OPCODE_LD_A_n = 0x3E, // LOAD A, n
@@ -32,6 +56,7 @@ namespace SharpBoy
             OPCODE_LD_A_nn = 0xFA,
             OPCODE_LD_A_A = 0x7F, // Why this exist?
             OPCODE_LD_B_A = 0x47,
+            OPCODE_LD_A_H = 0x7C,
             OPCODE_LD_ADR_C_A = 0xE2, // LOAD $0xFF00+C, A
             OPCODE_LD_A_HL = 0x7E,
             OPCODE_LD_A_HL_ADD = 0x2A, // LOAD A, HL+ (inc)
@@ -184,7 +209,9 @@ namespace SharpBoy
             { Opcode.OPCODE_LD_D_A, () => ld_d_a_ins() },
             { Opcode.OPCODE_INC_B, () => inc_b_ins() },
             { Opcode.OPCODE_LD_E_n, () => ld_e_n_ins() },
-
+            { Opcode.OPCODE_DEC_E, () => dec_e_ins() },
+            { Opcode.OPCODE_INC_H, () => inc_h_ins() },
+            { Opcode.OPCODE_LD_A_H, () => ld_a_h_ins() },
 
             // Add to Dissasembler
             { Opcode.OPCODE_EI, () => unimplemented_ins() },
@@ -194,6 +221,49 @@ namespace SharpBoy
         public static void unimplemented_ins()
         {
             UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void ld_a_h_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_a(cpu.get_reg_h());
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void inc_h_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_h() + 1);
+            cpu.set_reg_h(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void dec_e_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_e() - 1);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, cpu.HaveFlagCarry() ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
+            cpu.set_reg_e(value);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
             cpu.set_reg_pc((UInt16)(address + 1));
         }
 
@@ -388,11 +458,9 @@ namespace SharpBoy
 
         public static void inc_l_ins()
         {
-            // ANY FLAGS?
             UInt16 address = cpu.get_reg_pc();
 
             Byte value = (Byte)(cpu.get_reg_l() + 1);
-            cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() + 1));
             cpu.set_reg_l(value);
             
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
@@ -403,7 +471,6 @@ namespace SharpBoy
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
         }
 
         public static void jp_z_nn_ins()
@@ -1110,9 +1177,8 @@ namespace SharpBoy
         {
             String str_op = "nop";
 
-            SByte val1 = 0;
-            SByte val2 = 0;
-            UInt16 val3 = 0;
+            SByte lo = 0;
+            SByte hi = 0;
 
             switch(opcode)
             {
@@ -1124,10 +1190,10 @@ namespace SharpBoy
                 case Opcode.OPCODE_JMP:
                     str_op = "JMP ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "h";
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi) + "h";
                     address += 3;
                     break;
 
@@ -1139,10 +1205,10 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_HL_nn:
                     str_op = "LD HL, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "h";
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi) + "h";
                     address += 3;
                     break;
 
@@ -1158,8 +1224,8 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_JR_NZ:
                     str_op = "JR NZ, ";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
-                    str_op += String.Format("{0:X4}", Convert.ToUInt16(address + val1 + 2)) + "h";
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    str_op += String.Format("{0:X4}", Convert.ToUInt16(address + lo + 2)) + "h";
                     address += 2;
                     break;
 
@@ -1198,15 +1264,15 @@ namespace SharpBoy
 
                 case Opcode.OPCODE_LDH_N_A:
                     str_op = "LDH [$";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
-                    str_op += String.Format("{0:X4}", 0xFF00 + (Byte)val1) + "], A";
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    str_op += String.Format("{0:X4}", 0xFF00 + (Byte)lo) + "], A";
                     address += 2;
                     break;
 
                 case Opcode.OPCODE_LHD_A_N:
                     str_op = "LDH A, [$";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
-                    str_op += String.Format("{0:X4}", 0xFF00 + (Byte)val1) + "]";
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    str_op += String.Format("{0:X4}", 0xFF00 + (Byte)lo) + "]";
                     address += 2;
                     break;
 
@@ -1225,20 +1291,20 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_nn_A:
                     str_op = "LD [$";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2) + "], A";
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi) + "], A";
                     address += 3;
                     break;
 
                 case Opcode.OPCODE_LD_SP_nn:
                     str_op = "LD SP, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi);
                     address += 3;
                     break;
 
@@ -1260,20 +1326,20 @@ namespace SharpBoy
                 case Opcode.OPCODE_CALL_ADDRESS:
                     str_op = "CALL, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi);
                     address += 3;
                     break;
 
                 case Opcode.OPCODE_LD_BC_nn:
                     str_op = "LD BC, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi);
                     address += 3;
                     break;
 
@@ -1310,10 +1376,10 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_DE_nn:
                     str_op = "LD DE, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi);
                     address += 3;
                     break;
 
@@ -1389,18 +1455,18 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_A_nn:
                     str_op = "LD A, ";
 
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
-                    val2 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 2));
+                    hi = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
 
-                    str_op += String.Format("{0:X2}", val1) + String.Format("{0:X2}", val2);
+                    str_op += String.Format("{0:X2}", lo) + String.Format("{0:X2}", hi);
                     address += 3;
                     break;
 
 
                 case Opcode.OPCODE_JR_Z:
                     str_op = "JR Z, ";
-                    val1 = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
-                    str_op += String.Format("{0:X4}", Convert.ToUInt16(address + val1 + 2)) + "h";
+                    lo = (SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1));
+                    str_op += String.Format("{0:X4}", Convert.ToUInt16(address + lo + 2)) + "h";
                     address += 2;
                     break;
 

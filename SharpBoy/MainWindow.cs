@@ -38,21 +38,24 @@ namespace SharpBoy
 
         private void OpenGLPaint(object sender, PaintEventArgs args)
         {
-            if (!Program.emulator.isRunning)
+            if (!Program.emulator.isRunning || !Program.emulator.getRenderer().isDisplayOn)
                 return;
 
+            Program.emulator.getRenderer().Render();
             //GL.
             //GL.DrawPixels(256, 256, PixelFormat.Red, PixelType.Byte, Program.emulator.getRenderer().GetTilePatternSprites());
             //GL.DrawPixels(500, 500, PixelFormat.Red, PixelType.Byte, videoTest);
             //GL.bindte
-            //Logger.Logger.AppendLog(Logger.Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
             openGLControl.SwapBuffers();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Program.emulator.Stop();
             // TODO: Clear Everything Before Exiting!
-
+            Program.loggerW.Close();
+            //Program.loggerW.Dispose();
 
             Application.Exit();
         }

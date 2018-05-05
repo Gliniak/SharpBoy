@@ -15,10 +15,11 @@ ToDo:
 
 CPU:
 - Add remain not implemented opcodes
+- IRQ Support
 - (Probably) Some fixes to actually implemented one
 
 GPU:
-- Everything, Only Basic OpenGL window is working ATM. Not even data is stored in VRAM
+- Everything, Only Basic OpenGL window is working ATM
 
 Memory:
 - Basic functionality is working, need to add MCB support and come assertions to r/w memory operations

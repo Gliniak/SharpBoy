@@ -47,6 +47,8 @@
             this.columnHeader13 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader14 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader15 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tb_jmp_pos = new System.Windows.Forms.TextBox();
+            this.btn_jump = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // cb_specAddress
@@ -179,17 +181,37 @@
             this.columnHeader15.Text = "0F";
             this.columnHeader15.Width = 28;
             // 
+            // tb_jmp_pos
+            // 
+            this.tb_jmp_pos.Location = new System.Drawing.Point(385, 13);
+            this.tb_jmp_pos.Name = "tb_jmp_pos";
+            this.tb_jmp_pos.Size = new System.Drawing.Size(83, 20);
+            this.tb_jmp_pos.TabIndex = 2;
+            // 
+            // btn_jump
+            // 
+            this.btn_jump.Location = new System.Drawing.Point(474, 11);
+            this.btn_jump.Name = "btn_jump";
+            this.btn_jump.Size = new System.Drawing.Size(60, 23);
+            this.btn_jump.TabIndex = 3;
+            this.btn_jump.Text = "Jump";
+            this.btn_jump.UseVisualStyleBackColor = true;
+            this.btn_jump.Click += new System.EventHandler(this.btn_jump_Click);
+            // 
             // MemoryViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(546, 382);
+            this.Controls.Add(this.btn_jump);
+            this.Controls.Add(this.tb_jmp_pos);
             this.Controls.Add(this.lv_memView);
             this.Controls.Add(this.cb_specAddress);
             this.Name = "MemoryViewer";
             this.Text = "MemoryViewer";
             this.Load += new System.EventHandler(this.MemoryViewer_Load);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -214,5 +236,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader13;
         private System.Windows.Forms.ColumnHeader columnHeader14;
         private System.Windows.Forms.ColumnHeader columnHeader15;
+        private System.Windows.Forms.TextBox tb_jmp_pos;
+        private System.Windows.Forms.Button btn_jump;
     }
 }

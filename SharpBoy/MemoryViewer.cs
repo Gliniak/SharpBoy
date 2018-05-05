@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -74,6 +75,13 @@ namespace SharpBoy
                     Address = 0x0000;
                     break;
             }
+            Update_MemView();
+        }
+
+        private void btn_jump_Click(object sender, EventArgs e)
+        {
+            UInt16 address = UInt16.Parse(tb_jmp_pos.Text, NumberStyles.HexNumber);
+            Address = address;
             Update_MemView();
         }
     }
