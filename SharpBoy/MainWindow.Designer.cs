@@ -33,7 +33,6 @@ namespace SharpBoy
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.startToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.audioToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.inputToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,6 +41,7 @@ namespace SharpBoy
             this.disassemblerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.memoryViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startBIOSToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openGLControl = new OpenTK.GLControl();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -66,7 +66,7 @@ namespace SharpBoy
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
-            this.startToolStripMenuItem});
+            this.startBIOSToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -74,16 +74,9 @@ namespace SharpBoy
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
-            // 
-            // startToolStripMenuItem
-            // 
-            this.startToolStripMenuItem.Name = "startToolStripMenuItem";
-            this.startToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
-            this.startToolStripMenuItem.Text = "Start";
-            this.startToolStripMenuItem.Click += new System.EventHandler(this.startToolStripMenuItem_Click);
             // 
             // audioToolStripMenuItem
             // 
@@ -138,6 +131,14 @@ namespace SharpBoy
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // startBIOSToolStripMenuItem
+            // 
+            this.startBIOSToolStripMenuItem.Name = "startBIOSToolStripMenuItem";
+            this.startBIOSToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.startBIOSToolStripMenuItem.Text = "Start BIOS";
+            this.startBIOSToolStripMenuItem.Click += new System.EventHandler(this.startBIOSToolStripMenuItem_Click);
+
 
             this.openGLControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.openGLControl.BackColor = System.Drawing.SystemColors.ControlDarkDark;
@@ -149,7 +150,7 @@ namespace SharpBoy
             this.openGLControl.BackColor = Color.Black;
             this.openGLControl.Resize += new System.EventHandler(this.OpenGLResize);
             this.openGLControl.Paint += new System.Windows.Forms.PaintEventHandler(this.OpenGLPaint);
-            this.openGLControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OpenGLKeyPressed);
+            //this.openGLControl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OpenGLKeyPressed);
 
             // 
             // MainWindow
@@ -184,10 +185,10 @@ namespace SharpBoy
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem disassemblerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem startToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem memoryViewerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem startBIOSToolStripMenuItem;
 
-        private OpenTK.GLControl openGLControl;
+        public OpenTK.GLControl openGLControl;
     }
 }
 

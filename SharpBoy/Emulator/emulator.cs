@@ -28,7 +28,6 @@ namespace SharpBoy
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Initializing...");
             memory.InitializeMemory();
 
-            LoadBios(Directory.GetCurrentDirectory() + "/bios.gb");
             return true;
         }
 
@@ -37,18 +36,24 @@ namespace SharpBoy
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
             isRunning = true;
 
-            Boolean isLoaded = cart.IsCartridgeLoaded();
+            cpu.Start(); 
+        }
 
-            if (isLoaded)
-                cpu.set_reg_pc(0x0100);
+        public void Reset(bool BiosLoading = false)
+        {
+            if (isRunning)
+                Stop();
 
-            cpu.Start();
+            memory.InitializeMemory();
+            cpu.Reset(BiosLoading);
+
+            if(BiosLoading)
+                LoadBios(Directory.GetCurrentDirectory() + "/bios.gb");
         }
 
         public void Stop()
         {
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STOPPED");
-
             isRunning = false;
         }
 

@@ -138,7 +138,8 @@ namespace SharpBoy
 
             3 The IME flag is reset, and all interrupts are prohibited.
             4 The contents of the PC (program counter) are pushed onto the stack RAM.
-            5 Control jumps to the interrupt starting address of the interrupt.
+            5 Control jumps to the interrupt starting address of the interrupt.
+
         */
 
         public bool GetFlagBit(Flag_Register_Bits bitNumber) { return (Program.emulator.getCPU().get_reg_f() & (1 << (Byte)bitNumber)) != 0; }
@@ -222,6 +223,29 @@ namespace SharpBoy
             Opcodes.ExecuteOpcode((Opcodes.Opcode)op);
         }
 
+        public void Reset(bool BiosLoaded = false)
+        {
+            reg_sp = 0x0000;
+            reg_pc = 0x0000;
+
+            reg_af = new SixteenBitRegister(0x00, 0x00);
+            reg_bc = new SixteenBitRegister(0x00, 0x00);
+            reg_de = new SixteenBitRegister(0x00, 0x00);
+            reg_hl = new SixteenBitRegister(0x00, 0x00);
+
+            if(!BiosLoaded)
+            {
+                // This values should load during BIOS init, however we skip bios loading, so we need to load them manually
+                reg_sp = 0xFFFE;
+                reg_pc = 0x0100;
+
+                reg_af = new SixteenBitRegister(0x01, 0xB0);
+                reg_bc = new SixteenBitRegister(0x00, 0x13);
+                reg_de = new SixteenBitRegister(0x00, 0xD8);
+                reg_hl = new SixteenBitRegister(0x01, 0x4D);
+            }
+        }
+
         // TODO: Need to implement fast timer for RTC support!
         public void Start()
         {
@@ -244,6 +268,7 @@ namespace SharpBoy
                         if(!Program.emulator.getRenderer().isDisplayOn)
                             Program.emulator.getRenderer().Start();
 
+                        Program.emulator.getRenderer().Render();
                         // Display start!
 
                     }

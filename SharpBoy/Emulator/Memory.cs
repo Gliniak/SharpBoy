@@ -46,10 +46,15 @@ namespace SharpBoy
 
         public void WriteToMemory(UInt16 Address, Byte Value)
         {
-            //if (Address < 0x8000) // ROM place
-            //    return;
+            //if (Address < 0x0100) // ROM place
+             //   return;
 
             BaseMemory[Address] = Value;
+
+            if(Address == 0xFF40) // LCDC
+            {
+                return;
+            }
         }
 
         public void WriteToMemory(UInt16 Address, Byte[] Values, UInt16 count)
