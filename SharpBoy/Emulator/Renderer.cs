@@ -7,43 +7,19 @@ using OpenTK.Graphics.OpenGL;
 
 namespace SharpBoy
 {
-    class Sprite
-    {
-        Byte posX;
-        Byte posY;
-        Byte tile;
-        Byte Flags;
-
-        public Sprite(Byte[] data, Byte length)
-        {
-            if(length != 4)
-            {
-                // Wrong Sprite data?
-                return;
-            }
-
-            posX = data[0];
-            posY = data[1];
-            tile = data[2];
-            Flags = data[3];
-        }
-    }
+    
 
     /* Tile is stored as i.e 00 CC
        00 - is 0000 0000
        we use 2-bits per pixel (only 4 posible values)
     */
+
+    // README: Renderer class is supposed only to made post-effects and send data to screen, all stuff about reading frame etc is in DMA (LCD) Controller class
     class Renderer
     {
         // Default Gameboy have only this "colors" defined in byte at address: 0xFF47 
         // There are 4 color combinations stored each for 2 bits
-        public enum GameboyColors
-        {
-            GB_COLOR_WHITE,
-            GB_COLOR_LIGHT_GREY,
-            GB_COLOR_DARK_GREY,
-            GB_COLOR_BLACK
-        };
+
 
         // When Vblank iRQ occurs, redraw frame (AFAIK)
 
@@ -64,10 +40,8 @@ namespace SharpBoy
         // Values From 0 - 255
         public Byte[] GetTilePatternSprites() { return Program.emulator.GetMemory().ReadFromMemory(0x8000, 0x0FFF); }
 
-        // TODO: Values From -128 - 127
+        // Values From -128 - 127
         public Byte[] GetTilePattern() { return Program.emulator.GetMemory().ReadFromMemory(0x8800, 0x0FFF); }
-
-        public Byte[] GetOAM() { return Program.emulator.GetMemory().ReadFromMemory(0xFE00, 0x009F); }
 
         public Byte[] GetBGMapData() { return Program.emulator.GetMemory().ReadFromMemory(0x9800, 0x03FF); }
 
@@ -108,6 +82,11 @@ namespace SharpBoy
             // Send data to window?
             Program.mainWindow.openGLControl.Refresh(); // FORCES REPAINT
             //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "RENDER");
+        }
+
+        public void Update()
+        {
+
         }
     }
 }

@@ -214,9 +214,17 @@ namespace SharpBoy
             { Opcode.OPCODE_LD_A_H, () => ld_a_h_ins() },
 
             // Add to Dissasembler
-            { Opcode.OPCODE_EI, () => unimplemented_ins() },
+            { Opcode.OPCODE_EI, () => enable_interrupts() },
 
         };
+
+        public static void enable_interrupts()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            // Is it really works that way?
+            Program.emulator.GetMemory().WriteToMemory(0xFFFF, 0x1F);
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
 
         public static void unimplemented_ins()
         {

@@ -12,8 +12,9 @@ namespace SharpBoy
         public Boolean isRunning = false;
         public List<UInt16> breakPointsList = new List<UInt16>();
 
-        private CPU cpu = new CPU();
         private Memory memory = new Memory();
+
+        private CPU cpu = new CPU();
         private Renderer renderer = new Renderer();
 
         private Cartridge cart = new Cartridge();

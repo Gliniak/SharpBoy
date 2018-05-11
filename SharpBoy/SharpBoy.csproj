@@ -64,8 +64,11 @@
     </Compile>
     <Compile Include="Emulator\Cartridge.cs" />
     <Compile Include="Emulator\CPU\cpu.cs" />
+    <Compile Include="Emulator\CPU\InternalTimer.cs" />
+    <Compile Include="Emulator\CPU\InterruptController.cs" />
     <Compile Include="Emulator\CPU\Opcodes.cs" />
     <Compile Include="Emulator\CPU\OpcodesCB.cs" />
+    <Compile Include="Emulator\CPU\DMAController.cs" />
     <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\Memory.cs" />
     <Compile Include="Emulator\Renderer.cs" />

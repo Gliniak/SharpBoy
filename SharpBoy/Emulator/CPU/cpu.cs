@@ -33,15 +33,6 @@ namespace SharpBoy
             public SixteenBitRegister(Byte hi, Byte lo) { LowerByte = lo; UpperByte = hi; }
         };
 
-        public enum Interrupts
-        {
-            INTERRUPT_VBLANK = 0x01,
-            INTERRUPT_LCDSTAT = 0x02,
-            INTERRUPT_TIMER = 0x04,
-            INTERRUPT_SERIAL = 0x08,
-            INTERRUPT_PAD = 0x10
-        };
-
         public enum Flag_Register_Bits : Byte
         {
             FLAG_REGISTER_ZERO = 0x07,
@@ -57,7 +48,15 @@ namespace SharpBoy
         private double CPU_CLOCK_MULTIPLY = 10.0;
         private Boolean FAST_CLOCK = true;
 
+        private InterruptController irController = new InterruptController();
+        private InternalTimer internalTimer = new InternalTimer();
+        private DMAController dmaController = new DMAController();
+
         public CPU() { }
+
+        // For Special Use only
+        public Byte last_ie_reg_val = 0x00;
+        public Byte last_if_reg_val = 0x00;
 
         // 16 bit registers
         UInt16 reg_sp = 0xFFFE;
@@ -273,7 +272,14 @@ namespace SharpBoy
 
                     }
                     // TODO: Interrupts Support here
+                    irController.Update();
+                    // Lets update everything about Interrupts and other things.
+                    // TODO: This probably should be independent from CPU clock?
+                    dmaController.Update();
+                    internalTimer.Update();
+                    
 
+                    RequestIR();
 
                     exe_ins();
 
@@ -284,7 +290,20 @@ namespace SharpBoy
 
         public void RequestIR() // IRQ
         {
+            Byte ie_val = getIE_register();
+            Byte if_val = getIF_register();
 
+            if(ie_val != last_ie_reg_val)
+            {
+                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "NEW IE VAL: " + ie_val);
+                last_ie_reg_val = ie_val;
+            }
+
+            if (if_val != last_if_reg_val)
+            {
+                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "NEW IF VAL: " + if_val);
+                last_if_reg_val = if_val;
+            }
         }
 
         public void ExecuteIR()

@@ -35,7 +35,7 @@ namespace SharpBoy
             WriteToMemory(0xFF25, 0xF3);
             WriteToMemory(0xFF26, 0xF1); // special
 
-            WriteToMemory(0xFF40, 0x91);
+            WriteToMemory(0xFF40, 0x91); // LCDC
             WriteToMemory(0xFF47, 0xFC);
             WriteToMemory(0xFF48, 0xFF);
             WriteToMemory(0xFF49, 0xFF);
