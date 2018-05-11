@@ -42,6 +42,7 @@ namespace SharpBoy
             OPCODE_INC_DE = 0x13,
             OPCODE_DEC_B = 0x05, // DEC B
             OPCODE_DEC_C = 0x0D, // DEC C
+            OPCODE_DEC_D = 0x15, // DEC D
             OPCODE_DEC_E = 0x1D, // DEC E
 
             OPCODE_DEC_BC = 0x0B, // DEC BC
@@ -49,6 +50,7 @@ namespace SharpBoy
             OPCODE_LD_A_n = 0x3E, // LOAD A, n
             OPCODE_LD_B_n = 0x06, // LOAD B, n
             OPCODE_LD_C_n = 0x0E, // LOAD C, n
+            OPCODE_LD_D_n = 0x16, // LOAD D, n
             OPCODE_LD_A_B = 0x78, // LOAD A, B
             OPCODE_LD_A_C = 0x79, // LOAD A, C
             OPCODE_LD_C_A = 0x4F, // LOAD C, A
@@ -126,6 +128,10 @@ namespace SharpBoy
 
             OPCODE_INC_B = 0x04,
             OPCODE_LD_E_n = 0x1E,
+
+            OPCODE_SUB_A_B = 0x90, // A =- B
+            OPCODE_JR_n = 0x18, // Jump to ADR +/- n
+            OPCODE_CP_A_HL = 0xBE,
             // TO DO!
 
             //OPCODE_CP_A_A = 0xBF, // COMPARE A, A
@@ -212,11 +218,88 @@ namespace SharpBoy
             { Opcode.OPCODE_DEC_E, () => dec_e_ins() },
             { Opcode.OPCODE_INC_H, () => inc_h_ins() },
             { Opcode.OPCODE_LD_A_H, () => ld_a_h_ins() },
+            { Opcode.OPCODE_DEC_D, () => dec_d_ins() },
+            { Opcode.OPCODE_SUB_A_B, () => sub_a_b_ins() },
+            { Opcode.OPCODE_LD_D_n, () => ld_d_ins() },
+            { Opcode.OPCODE_JR_n, () => jr_n_ins() },
+            { Opcode.OPCODE_CP_A_HL, () => cp_a_hl_ins() },
 
             // Add to Dissasembler
             { Opcode.OPCODE_EI, () => enable_interrupts() },
 
         };
+
+        public static void cp_a_hl_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = Program.emulator.GetMemory().ReadFromMemory(cpu.get_reg_hl());
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
+            if (cpu.get_reg_a() == value)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            if (cpu.get_reg_a() < value)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
+
+            if (((cpu.get_reg_a() - value) & 0x0F) > (cpu.get_reg_a() & 0x0F))
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void jr_n_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            SByte value = ((SByte)Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + value + 2));
+        }
+
+        public static void ld_d_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            cpu.set_reg_d(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+        }
+
+        public static void sub_a_b_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            Byte value = (Byte)(cpu.get_reg_a() - cpu.get_reg_b());
+
+            // Is This ok?
+            Byte carry = (Byte)((cpu.get_reg_a() ^ cpu.get_reg_b()) ^ value);
+            cpu.set_reg_a(value);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, false);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, cpu.get_reg_a() == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, ((carry & 0x0100) != 0) ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, ((carry & 0x0010) != 0) ? true : false);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void dec_d_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = (Byte)(cpu.get_reg_d() - 1);
+
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, cpu.HaveFlagCarry() ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
+
+            cpu.set_reg_d(value);
+
+            if ((value & 0x0F) == 0x0F)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
 
         public static void enable_interrupts()
         {
@@ -1589,6 +1672,31 @@ namespace SharpBoy
                 case Opcode.OPCODE_LD_E_n:
                     str_op = "LD E, n";
                     address += 2;
+                    break;
+
+                case Opcode.OPCODE_DEC_D:
+                    str_op = "DEC D";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_SUB_A_B:
+                    str_op = "SUB A, B";
+                    address += 1;
+                    break;
+
+                case Opcode.OPCODE_LD_D_n:
+                    str_op = "LD D, n";
+                    address += 2;
+                    break;
+
+                case Opcode.OPCODE_JR_n:
+                    str_op = "JR n";
+                    address += 2;
+                    break;
+
+                case Opcode.OPCODE_CP_A_HL:
+                    str_op = "CP A, HL";
+                    address += 1;
                     break;
 
                 case Opcode.OPCODE_INTERNAL_CB:

@@ -130,7 +130,7 @@ namespace SharpBoy
 
         private void pause_button_Click(object sender, EventArgs e)
         {
-            Program.emulator.getCPU().exe_ins();
+            Program.emulator.getCPU().ExeCycle();
 
             cpu_regs_update_in_window();
 

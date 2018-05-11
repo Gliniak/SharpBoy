@@ -70,13 +70,79 @@ namespace SharpBoy
         public void SetLCDCregister(Byte value) { Program.emulator.GetMemory().WriteToMemory(0xFF40, value); }
         public void SetLCDCregisterBit(Byte bit, bool toogle)
         {
+            // Fix this!
             SetLCDCregister(toogle ? (Byte)(GetLCDCregister() | (1 << bit)) : (Byte)(GetLCDCregister() ^ (1 << bit)));
         }
 
         public bool IsDisplayOn() { return GetLCDCregisterBits().Get(7); }
 
+        /*
+            Bit 6 - LYC=LY Coincidence Interrupt (1=Enable) (Read/Write)
+            Bit 5 - Mode 2 OAM Interrupt         (1=Enable) (Read/Write)
+            Bit 4 - Mode 1 V-Blank Interrupt     (1=Enable) (Read/Write)
+            Bit 3 - Mode 0 H-Blank Interrupt     (1=Enable) (Read/Write)
+            Bit 2 - Coincidence Flag  (0:LYC<>LY, 1:LYC=LY) (Read Only)
+            Bit 1-0 - Mode Flag       (Mode 0-3, see below) (Read Only)
+                0: During H-Blank
+                1: During V-Blank
+                2: During Searching OAM
+                3: During Transferring Data to LCD Driver
+         */
+
+        public Byte GetSTATregister() { return Program.emulator.GetMemory().ReadFromMemory(0xFF41); }
+        public BitArray GetSTATregisterBits() { return new BitArray(GetSTATregister()); }
+
+        public void setSTATregister(Byte value) { Program.emulator.GetMemory().WriteToMemory(0xFF41, value); }
+        public void setSTATregisterBit(Byte bit, bool toogle)
+        {
+            // Fix this!
+            setSTATregister(toogle ? (Byte)(GetSTATregister() | (1 << bit)) : (Byte)(GetSTATregister() ^ (1 << bit)));
+        }
+
+        public LCDmodeFlag getSTATmodeFlag() { return (LCDmodeFlag)(GetSTATregister() & 0x03); }
+
+        public Byte GetSCY() { return Program.emulator.GetMemory().ReadFromMemory(0xFF42); }
+        public Byte GetSCX() { return Program.emulator.GetMemory().ReadFromMemory(0xFF43); }
+
+        public void SetSCY(Byte value) { Program.emulator.GetMemory().WriteToMemory(0xFF42, value); }
+        public void SetSCX(Byte value) { Program.emulator.GetMemory().WriteToMemory(0xFF43, value); }
+
+        public Byte GetLY() { return Program.emulator.GetMemory().ReadFromMemory(0xFF44); }
+        public void SetLY(Byte value)
+        {
+            if(value > 153)
+            {
+                Program.emulator.GetMemory().WriteToMemory(0xFF44, 0);
+                return;
+            }
+            // Vblank period
+            if(value > 143 && !Program.emulator.getCPU().GetInterruptController().IsInQueue(InterruptController.Interrupt.INTERRUPT_VBLANK))
+            {
+                // Raise Interrupt!
+                Program.emulator.getCPU().GetInterruptController().RaiseInterrupt(InterruptController.Interrupt.INTERRUPT_VBLANK);
+                //Program.emulator.GetMemory().WriteToMemory(0xFF44, 0);
+                return;
+            }
+
+            
+            Program.emulator.GetMemory().WriteToMemory(0xFF44, value);
+        }
+
+        public Byte GetLYC() { return Program.emulator.GetMemory().ReadFromMemory(0xFF45); }
+
+        public bool CompareLYtoLYC() { return GetLY() == GetLYC(); }
+
         public void Update()
         {
+            if(CompareLYtoLYC())
+            {
+                // STAT INTERRUPT
+                Program.emulator.getCPU().GetInterruptController().RaiseInterrupt(InterruptController.Interrupt.INTERRUPT_LCDC);
+
+            }
+            // Draw next line
+            SetLY((Byte)(GetLY() + 1));
+
 
             //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DMAController: Update()");
         }

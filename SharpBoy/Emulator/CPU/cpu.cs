@@ -52,6 +52,8 @@ namespace SharpBoy
         private InternalTimer internalTimer = new InternalTimer();
         private DMAController dmaController = new DMAController();
 
+        public InterruptController GetInterruptController() { return irController; }
+
         public CPU() { }
 
         // For Special Use only
@@ -245,6 +247,17 @@ namespace SharpBoy
             }
         }
 
+        public void ExeCycle()
+        {
+            irController.Update();
+            // Lets update everything about Interrupts and other things.
+            // TODO: Need to implement CPU_CYCLES for proper Interrupt timings!
+            dmaController.Update();
+            internalTimer.Update();
+
+            exe_ins();
+
+        }
         // TODO: Need to implement fast timer for RTC support!
         public void Start()
         {
@@ -252,6 +265,7 @@ namespace SharpBoy
             {
                 do
                 {
+                    /*
                     // Breakpoints support
                     if (Program.emulator.breakPointsList.Count != 0)
                     {
@@ -270,45 +284,12 @@ namespace SharpBoy
                         Program.emulator.getRenderer().Render();
                         // Display start!
 
-                    }
+                    }*/
                     // TODO: Interrupts Support here
-                    irController.Update();
-                    // Lets update everything about Interrupts and other things.
-                    // TODO: This probably should be independent from CPU clock?
-                    dmaController.Update();
-                    internalTimer.Update();
-                    
-
-                    RequestIR();
-
-                    exe_ins();
+                    ExeCycle();
 
                 } while (Program.emulator.isRunning);
             });
-        }
-
-
-        public void RequestIR() // IRQ
-        {
-            Byte ie_val = getIE_register();
-            Byte if_val = getIF_register();
-
-            if(ie_val != last_ie_reg_val)
-            {
-                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "NEW IE VAL: " + ie_val);
-                last_ie_reg_val = ie_val;
-            }
-
-            if (if_val != last_if_reg_val)
-            {
-                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "NEW IF VAL: " + if_val);
-                last_if_reg_val = if_val;
-            }
-        }
-
-        public void ExecuteIR()
-        {
-
         }
     }
 }
