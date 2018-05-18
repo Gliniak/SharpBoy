@@ -33,7 +33,7 @@ namespace SharpBoy
 
         public void RaiseInterrupt(Interrupt interrupt)
         {
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "InterruptController: RaiseInterrupt(" + interrupt.ToString() + ")");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "InterruptController: RaiseInterrupt(" + interrupt.ToString() + ")");
 
             switch(interrupt)
             {

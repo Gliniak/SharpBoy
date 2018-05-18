@@ -43,16 +43,13 @@ namespace SharpBoy
 
         public Task cpuTask;
 
-        // FOR FUTURE USAGE
-        private readonly double CPU_CLOCK = 1/(4.194304 * 1000000);
-        private double CPU_CLOCK_MULTIPLY = 10.0;
-        private Boolean FAST_CLOCK = true;
-
         private InterruptController irController = new InterruptController();
         private InternalTimer internalTimer = new InternalTimer();
         private DMAController dmaController = new DMAController();
+        private VideoController videoController = new VideoController();
 
         public InterruptController GetInterruptController() { return irController; }
+        public DMAController GetDMAController() { return dmaController; }
 
         public CPU() { }
 
@@ -195,9 +192,10 @@ namespace SharpBoy
             value = ((UInt16)((hi << 8) | lo));
         }
 
-        public void exe_ins()
+        public Byte exe_ins()
         {
-            Byte op = Program.emulator.GetMemory().ReadFromMemory(reg_pc);
+            Byte opTime = 1;
+            Opcodes.Opcode op = (Opcodes.Opcode)(Program.emulator.GetMemory().ReadFromMemory(reg_pc));
 
            // Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "[" + String.Format("{0:X4}", get_reg_pc()) + "]: " + String.Format("{0:X2}", op) + "PRE Execute");
             if (!Enum.IsDefined(typeof(Opcodes.Opcode), op))
@@ -206,22 +204,24 @@ namespace SharpBoy
                     + " At Address: " + String.Format("{0:X4}", reg_pc));
 
                 set_reg_pc((UInt16)(get_reg_pc() + 1));
-                return;
+                return opTime;
             }
 
             // Special Execute for CB Opcodes
-            if((Opcodes.Opcode)op == Opcodes.Opcode.OPCODE_INTERNAL_CB)
+            if(op == Opcodes.Opcode.OPCODE_INTERNAL_CB)
             {
                 // Increase Program Counter to next location
                 set_reg_pc((UInt16)(get_reg_pc() + 1));
-                op = Program.emulator.GetMemory().ReadFromMemory(reg_pc);
-
-                OpcodesCB.ExecuteOpcodeCB((OpcodesCB.OpcodeCB)op);
-                return;
+                OpcodesCB.ExecuteOpcodeCB((OpcodesCB.OpcodeCB)(Program.emulator.GetMemory().ReadFromMemory(reg_pc)));
+                // TODO: IMplement Clocks for CB Opcodes
+                return opTime;
             }
 
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "[" + String.Format("{0:X4}", get_reg_pc()) + "]: " + ((Opcodes.Opcode)op).ToString() + " Executing");
-            Opcodes.ExecuteOpcode((Opcodes.Opcode)op);
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "[" + String.Format("{0:X4}", get_reg_pc()) + "]: " + op.ToString() + " Executing");
+            Opcodes.ExecuteOpcode(op);
+            opTime = Opcodes.opcodeTimings.ContainsKey(op) ? Opcodes.opcodeTimings[op] : (byte)1;
+
+            return opTime;
         }
 
         public void Reset(bool BiosLoaded = false)
@@ -249,43 +249,40 @@ namespace SharpBoy
 
         public void ExeCycle()
         {
+            Byte ticks = exe_ins();
+
             irController.Update();
             // Lets update everything about Interrupts and other things.
             // TODO: Need to implement CPU_CYCLES for proper Interrupt timings!
-            dmaController.Update();
+
+
+            videoController.Update(ticks);
+            dmaController.Tick();
             internalTimer.Update();
-
-            exe_ins();
-
         }
-        // TODO: Need to implement fast timer for RTC support!
+
+        public bool BreakpointOccurred()
+        {
+            if (Program.emulator.breakPointsList.Count == 0)
+                return false;
+
+            if (Program.emulator.breakPointsList.Contains(Program.emulator.getCPU().get_reg_pc()))
+            {
+                Program.emulator.isRunning = false;
+                return true;
+            }
+            return false;
+        }
+
         public void Start()
         {
             cpuTask = Task.Run(() =>
             {
                 do
                 {
-                    /*
-                    // Breakpoints support
-                    if (Program.emulator.breakPointsList.Count != 0)
-                    {
-                        if (Program.emulator.breakPointsList.Contains(Program.emulator.getCPU().get_reg_pc()))
-                        {
-                            Program.emulator.isRunning = false;
-                            break;
-                        }
-                    }
+                    //if (BreakpointOccurred())
+                    //    continue;
 
-                    if ((Program.emulator.GetMemory().ReadFromMemory(0xFF40) & 0x80) == 0x80)
-                    {
-                        if(!Program.emulator.getRenderer().isDisplayOn)
-                            Program.emulator.getRenderer().Start();
-
-                        Program.emulator.getRenderer().Render();
-                        // Display start!
-
-                    }*/
-                    // TODO: Interrupts Support here
                     ExeCycle();
 
                 } while (Program.emulator.isRunning);

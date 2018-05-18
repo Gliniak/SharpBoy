@@ -3,8 +3,8 @@ Not working (YET) Gameboy (Classic) Emulator written in C#. Please do not post t
 This is just a learning project. Thank you kindly.
 
 Progress:
-- CPU: 40%
-- GPU: 5%
+- CPU: 60%
+- GPU: 40%
 - Memory: 90%
 - Cartridge: 50%
 - Sound: 0%
@@ -18,11 +18,15 @@ CPU:
 - IRQ Support
 - (Probably) Some fixes to actually implemented one
 
+LONG TERM:
+- Recompiler
+
 GPU:
-- Everything, Only Basic OpenGL window is working ATM
+- Fix background rendering, Add Sprites rendering.
 
 Memory:
-- Basic functionality is working, need to add MCB support and come assertions to r/w memory operations
+- Basic functionality is working, need to add MCB support and some assertions to r/w memory operations
+- Check if DMA works good
 
 Cartridge:
 - MBC Support

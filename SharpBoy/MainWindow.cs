@@ -26,15 +26,12 @@ namespace SharpBoy
         public void DrawFrame()
         {
             // I need to gain prepared data (as 2d tex?) from renderer instead of this dummy stuff
-            Byte[] values = new Byte[800 * 600];
 
-            for (int i = 0; i < 800 * 600; i++)
-                values[i] = 10;
-
-            GL.DrawPixels(800, 600, PixelFormat.Green, PixelType.Byte, values);
+            GL.DrawPixels(160, 144, PixelFormat.Rgba, PixelType.UnsignedInt8888, Program.emulator.getRenderer().ScreenBuffer);
 
             Program.mainWindow.openGLControl.SwapBuffers();
         }
+
         private void OpenGLResize(object sender, EventArgs args)
         {
             //isResizing = true;
@@ -58,15 +55,19 @@ namespace SharpBoy
                 return;
 
             DrawFrame();
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
         }
         
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Program.emulator.Stop();
             // TODO: Clear Everything Before Exiting!
-            Program.loggerW.Close();
-            //Program.loggerW.Dispose();
+
+            // Do we need to do this?
+            Program.loggerW.Invoke(new Action(delegate ()
+            {
+                Program.loggerW.Close();
+            }));
 
             Application.Exit();
         }
@@ -107,11 +108,7 @@ namespace SharpBoy
             if (Program.loggerW == null)
                 return;
 
-            Program.loggerW.Invoke(new Action(delegate ()
-            {
-                Program.loggerW.Close();
-            }));
-            
+            Program.loggerW.Close();
         }
 
         private void disassemblerToolStripMenuItem_Click(object sender, EventArgs e)

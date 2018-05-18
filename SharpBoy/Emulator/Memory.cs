@@ -46,15 +46,20 @@ namespace SharpBoy
 
         public void WriteToMemory(UInt16 Address, Byte Value)
         {
-            //if (Address < 0x0100) // ROM place
-             //   return;
-
             BaseMemory[Address] = Value;
 
-            if(Address == 0xFF40) // LCDC
+            if(Address == 0xFF46)
             {
-                return;
+                Program.emulator.getCPU().GetDMAController().StartOAM(Value);
             }
+            /*
+            switch(Address)
+            {
+                case 0xFF46: //DMA Transfer
+
+            }
+            */
+
         }
 
         public void WriteToMemory(UInt16 Address, Byte[] Values, UInt16 count)

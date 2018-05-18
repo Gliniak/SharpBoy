@@ -72,6 +72,7 @@
     <Compile Include="Emulator\Emulator.cs" />
     <Compile Include="Emulator\Memory.cs" />
     <Compile Include="Emulator\Renderer.cs" />
+    <Compile Include="Emulator\Video\VideoController.cs" />
     <Compile Include="LoggerWindow.cs">
       <SubType>Form</SubType>
     </Compile>

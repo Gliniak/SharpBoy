@@ -140,6 +140,12 @@ namespace SharpBoy
 
         }
 
+        static public Dictionary<Opcode, Byte> opcodeTimings = new Dictionary<Opcode, byte>()
+        {
+            { Opcode.OPCODE_ADD_A_A, 1 },
+
+        };
+
         static Dictionary<Opcode, Action> opcodes = new Dictionary<Opcode, Action>()
         {
             { Opcode.OPCODE_NOP, () => nop_instruction() },

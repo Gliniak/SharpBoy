@@ -54,7 +54,7 @@ namespace SharpBoy
 
         public void Stop()
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STOPPED");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STOPPED");
             isRunning = false;
         }
 

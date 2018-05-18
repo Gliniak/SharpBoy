@@ -17,6 +17,9 @@ namespace SharpBoy
     // README: Renderer class is supposed only to made post-effects and send data to screen, all stuff about reading frame etc is in DMA (LCD) Controller class
     class Renderer
     {
+
+        public UInt32[] ScreenBuffer = new UInt32[256 * 256];
+
         // Default Gameboy have only this "colors" defined in byte at address: 0xFF47 
         // There are 4 color combinations stored each for 2 bits
 
@@ -33,7 +36,7 @@ namespace SharpBoy
         //Bit 1 - OBJ(Sprite) Display Enable(0=Off, 1=On)
         //Bit 0 - BG Display(for CGB see below) (0=Off, 1=On)
 
-        public System.Boolean isDisplayOn = false;
+        public System.Boolean isDisplayOn = true;
 
         public Renderer() { }
 
@@ -45,6 +48,8 @@ namespace SharpBoy
 
         public Byte[] GetBGMapData() { return Program.emulator.GetMemory().ReadFromMemory(0x9800, 0x03FF); }
 
+        public UInt32[] GetScreenBuffer() { return ScreenBuffer; }
+
         public void Start()
         {
             isDisplayOn = true;
@@ -52,6 +57,8 @@ namespace SharpBoy
 
         public void PrepareFrame()
         {
+            //for(Byte  i = 0; i < 256 *)
+
             // Thanks to: http://gameboy.mongenel.com/dmg/asmmemmap.html
 
             /*
@@ -81,7 +88,7 @@ namespace SharpBoy
         {
             // Send data to window?
             Program.mainWindow.openGLControl.Refresh(); // FORCES REPAINT
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "RENDER");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "RENDER");
         }
 
         public void Update()
