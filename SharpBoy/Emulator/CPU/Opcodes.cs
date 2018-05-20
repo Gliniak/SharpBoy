@@ -40,6 +40,7 @@ namespace SharpBoy
             OPCODE_INC_H = 0x24,
             OPCODE_INC_BC = 0x03,
             OPCODE_INC_DE = 0x13,
+            OPCODE_DEC_A = 0x3D,
             OPCODE_DEC_B = 0x05, // DEC B
             OPCODE_DEC_C = 0x0D, // DEC C
             OPCODE_DEC_D = 0x15, // DEC D
@@ -122,7 +123,7 @@ namespace SharpBoy
 
             OPCODE_RL_A_CF = 0x17, // Rotate left register A carry flag
             OPCODE_LD_A_E = 0x7B,
-            OPCODE_DEC_A = 0x3D,
+            
             OPCODE_LD_HL_A = 0x67,
             OPCODE_LD_D_A = 0x57,
 
@@ -132,6 +133,8 @@ namespace SharpBoy
             OPCODE_SUB_A_B = 0x90, // A =- B
             OPCODE_JR_n = 0x18, // Jump to ADR +/- n
             OPCODE_CP_A_HL = 0xBE,
+
+            OPCODE_LD_L_n = 0x2E,
             // TO DO!
 
             //OPCODE_CP_A_A = 0xBF, // COMPARE A, A
@@ -151,19 +154,27 @@ namespace SharpBoy
             { Opcode.OPCODE_NOP, () => nop_instruction() },
             { Opcode.OPCODE_JMP, () => jmp_instruction() },
             { Opcode.OPCODE_XOR, () => xor_a_ins() },
-            { Opcode.OPCODE_LD_HL_nn, () => ld_hl_nn_ins() },
-            { Opcode.OPCODE_LD_C_n, () => ld_c_ins() },
-            { Opcode.OPCODE_LD_B_n, () => ld_b_ins() },
-            { Opcode.OPCODE_LDD_HL, () => ldd_hl_ins() },
+
+
+            { Opcode.OPCODE_LD_HL_nn, () => ld_hl_nn_ins() }, // CHECKED - OK
+            { Opcode.OPCODE_LD_C_n, () => ld_c_ins() }, // CHECKED - OK
+            { Opcode.OPCODE_LD_B_n, () => ld_b_ins() }, // CHECKED - OK
+            { Opcode.OPCODE_LDD_HL, () => ldd_hl_ins() }, // CHECKED - OK
+
+
             { Opcode.OPCODE_DEC_B, () => dec_b_ins() },
+
+
             { Opcode.OPCODE_JR_NZ, () => jr_nz_ins() },
+
+
             { Opcode.OPCODE_DEC_C, () => dec_c_ins() },
             { Opcode.OPCODE_LD_A_n, () => ld_a_n_ins() },
-            { Opcode.OPCODE_DI, () => di_ins() },
+            
             { Opcode.OPCODE_LDH_N_A, () => ldh_n_a_ins() },
             { Opcode.OPCODE_LHD_A_N, () => ldh_a_n_ins() },
             { Opcode.OPCODE_RRCA, () => rrca_ins() },
-            { Opcode.OPCODE_CP_n, () => cp_n_ins() },
+            { Opcode.OPCODE_CP_n, () => cp_n_ins() }, // CHECK?
             { Opcode.OPCODE_LD_HL_n, () => ld_hl_n_ins() },
             { Opcode.OPCODE_LD_nn_A, () => ld_nn_a_ins() },
             { Opcode.OPCODE_LD_SP_nn, () => ld_sp_nn_ins() },
@@ -229,11 +240,21 @@ namespace SharpBoy
             { Opcode.OPCODE_LD_D_n, () => ld_d_ins() },
             { Opcode.OPCODE_JR_n, () => jr_n_ins() },
             { Opcode.OPCODE_CP_A_HL, () => cp_a_hl_ins() },
+            { Opcode.OPCODE_LD_L_n, () => ld_l_n_ins() },
 
             // Add to Dissasembler
+            { Opcode.OPCODE_DI, () => di_ins() },
             { Opcode.OPCODE_EI, () => enable_interrupts() },
 
         };
+
+        public static void ld_l_n_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+            cpu.set_reg_l(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
+            cpu.set_reg_pc((UInt16)(address + 2));
+        }
+
 
         public static void cp_a_hl_ins()
         {
@@ -417,9 +438,8 @@ namespace SharpBoy
             if ((value & 0x0F) == 0x0F)
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_H_CARRY, true);
 
-            if (value == 0)
-                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
-
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, value == 0 ? true : false);
+                
             cpu.set_reg_pc((UInt16)(address + 1));
             //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "DEC HL INSTRUCTION EXECUTED");
         }
@@ -1056,8 +1076,8 @@ namespace SharpBoy
 
             cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_SUBSTRACT, true);
 
-            if (cpu.get_reg_a() == value)
-                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+            // Is this ok?
+            cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, cpu.get_reg_a() == value ? true : false);
 
             if (cpu.get_reg_a() < value)
                 cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
@@ -1186,7 +1206,6 @@ namespace SharpBoy
 
             cpu.set_reg_hl(value);
             cpu.set_reg_pc((UInt16)(address + 3));
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL INSTRUCTION EXECUTED");
         }
 
 
@@ -1196,7 +1215,6 @@ namespace SharpBoy
 
             cpu.set_reg_c(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
             cpu.set_reg_pc((UInt16)(address + 2));
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD C INSTRUCTION EXECUTED");
         }
 
         public static void ld_b_ins()
@@ -1205,19 +1223,16 @@ namespace SharpBoy
 
             cpu.set_reg_b(Program.emulator.GetMemory().ReadFromMemory((UInt16)(address + 1)));
             cpu.set_reg_pc((UInt16)(address + 2));
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD B INSTRUCTION EXECUTED");
         }
 
         public static void ldd_hl_ins()
         {
             UInt16 address = cpu.get_reg_pc();
 
-            //cpu.set_reg_hl((UInt16)(cpu.get_reg_a()));
             Program.emulator.GetMemory().WriteToMemory(cpu.get_reg_hl(), cpu.get_reg_a());
             cpu.set_reg_hl((UInt16)(cpu.get_reg_hl() - 1));
 
             cpu.set_reg_pc((UInt16)(address + 1));
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "LOAD HL, A DEC A INSTRUCTION EXECUTED");
         }
 
         public static void dec_b_ins()
