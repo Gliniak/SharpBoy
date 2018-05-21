@@ -179,6 +179,9 @@ namespace SharpBoy
             }
             else
             {
+                if(!Program.emulator.GetCartridge().IsCartridgeLoaded())
+                    Program.emulator.Reset(true);
+
                 Program.emulator.Start();
 
                 btn_start.Text = "Stop";

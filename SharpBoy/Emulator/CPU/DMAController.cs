@@ -1,21 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SharpBoy
 {
-    // AKA LCD CONTROLLER (In CGB)
-
-    /*
-     * It suppose to have access to some registers (Memory Registers)
-     * Copy memory to OAM
-     * Send data to display 
-     * Is responsible for: LCDC Interrupt and (i guess) Vblank Interrupt
-     */
-
     class DMAController
     {
         private Boolean enabled = false;

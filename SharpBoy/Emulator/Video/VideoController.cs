@@ -9,13 +9,25 @@ namespace SharpBoy
     class VideoController
     {
         // 40x32bits OAMobj
-        /*
+        
         class Sprite
         {
             Byte posX;
             Byte posY;
             Byte tile;
             Byte Flags; // Bits 4 to 7
+
+            public Sprite(UInt16 Address)
+            {
+                if (Address < 0xFE00)
+                    return;
+
+                posX = (Byte)(Program.emulator.GetMemory().ReadFromMemory(Address) - 16);
+                posY = (Byte)(Program.emulator.GetMemory().ReadFromMemory((UInt16)(Address + 1)) - 8);
+
+                tile = Program.emulator.GetMemory().ReadFromMemory((UInt16)(Address + 2));
+                Flags = Program.emulator.GetMemory().ReadFromMemory((UInt16)(Address + 3));
+            }
 
             public Sprite(Byte[] data, Byte length)
             {
@@ -30,8 +42,15 @@ namespace SharpBoy
                 tile = data[2];
                 Flags = data[3];
             }
+
+            public Byte GetPosX() { return posX; }
+            public Byte GetPosY() { return posY; }
+            public Byte GetTile() { return tile; }
+            public Byte GetFlags() { return Flags; }
+
+            public Byte GetHeight() { return (Byte)(((Byte)(Flags & 0x04) == 0) ? 8 : 16); }
         }
-        */
+        
 
         public enum GameboyColors
         {
@@ -52,11 +71,12 @@ namespace SharpBoy
         public const Byte GB_WIDTH = 160;
         public const Byte GB_HEIGHT = 144;
 
-        public Int32 cycles = -1;
-        public Byte pixCounter = 0;
-        public bool lineRendered = false;
+        private Int32 cycles = -1;
 
-        public VideoController() { }
+        public VideoController()
+        {
+            //SetLCDmode(LCDmodeFlag.LCD_MODE_FLAG_OAM_READ);
+        }
 
         // OAM mem is available only during mode 0-1 (H and Vblank period), However DMA have access to it all time (0xFF46)
         public Byte[] GetOAM() { return Program.emulator.GetMemory().ReadFromMemory(0xFE00, 0x009F); }
@@ -134,7 +154,7 @@ namespace SharpBoy
             if (cycles != -1)
                 cycles += cpu_ticks;
 
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "[GPU] Update: " + getSTATmodeFlag().ToString());
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "[GPU] Update: " + getSTATmodeFlag().ToString());
 
             switch (getSTATmodeFlag())
             {
@@ -179,12 +199,14 @@ namespace SharpBoy
             if (cycles == -1)
                 cycles = 0;
 
-            // Not perfectly correct :/
+            // TODO: Not perfectly correct :/
             if (cycles % 114 == 0)
                 SetLY((Byte)(GetLY() + 1));
 
             if (cycles < 1140)
                 return;
+
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "[GPU] Update: " + getSTATmodeFlag().ToString());
 
             cycles = -1;
 
@@ -209,6 +231,8 @@ namespace SharpBoy
             if (cycles < 20)
                 return;
 
+            cycles = -1;
+
             SetLCDmode(LCDmodeFlag.LCD_MODE_FLAG_DATA_TO_LCD);
         }
 
@@ -220,24 +244,17 @@ namespace SharpBoy
             if (cycles < 40)
                 return;
 
-            if (!lineRendered)
-            {
-                RenderScanline(GetLY());
-                lineRendered = true;
-            }
-
             if (cycles >= 43)
             {
-                pixCounter = 0;
-
+                cycles = -1;
+                RenderScanline(GetLY());
                 SetLCDmode(LCDmodeFlag.LCD_MODE_FLAG_H_BLANK);
-                lineRendered = false;
             }
         }
 
         private void RenderScanline(Byte line)
         {
-            if (line > GB_HEIGHT)
+            if (line >= GB_HEIGHT)
                 return;
 
             if (GetLCDCregisterBit(0))
@@ -250,60 +267,80 @@ namespace SharpBoy
 
         private void RenderBackground(Byte line)
         {
-            // WX (Aka window size is higer than display size)
             Byte WX = Program.emulator.GetMemory().ReadFromMemory(0xFF4B);
             Byte WY = Program.emulator.GetMemory().ReadFromMemory(0xFF4A);
 
-            if (line > 143)
-                return;
+            UInt16 tiles = (UInt16)(GetLCDCregisterBit(4) ? 0x8000 : 0x8800);
+            UInt16 map = (UInt16)(GetLCDCregisterBit(3) ? 0x9C00 : 0x9800);
 
-            UInt16 tiles = (UInt16)(GetSTATregisterBit(4) ? 0x8000 : 0x8800);
-            UInt16 map = (UInt16)(GetSTATregisterBit(6) ? 0x9C00 : 0x9800);
-            UInt16 tileRow = (UInt16)((line / 8) * 32); // AKA. Y axis
+            bool windowMode = false;
 
-            UInt16 pixel = (UInt16)((line % 8) * 2);
+            if (GetLCDCregisterBit(5) && WY > GetSCY())
+                windowMode = true;
+
+            Byte yPos = (Byte)((GetSCY() + line) % 0xFF);
+
+            if (windowMode)
+            {
+                map = (UInt16)(GetLCDCregisterBit(6) ? 0x9C00 : 0x9800);
+                yPos = (Byte)((GetSCY() - WY) % 0xFF);
+            }
+
+            UInt16 tileRow = (UInt16)((yPos >> 3) << 5);
 
             // Scan Whole line 0 to 160 pixels
             for (Byte x = 0; x < GB_WIDTH; x++)
             {
-                UInt16 tile = Program.emulator.GetMemory().ReadFromMemory((UInt16)(map + tileRow + (x / 8)));
-                UInt16 tileAdr = (UInt16)(tile * 16);
+                Byte xPos = (Byte)((x + GetSCX()) % 0xFF);
 
-                Byte tileLine = (Byte)(WY % 8);
-                tileLine *= 2;
+                if (windowMode && x >= WX)
+                    xPos = (Byte)(x - WX);
 
-                Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(tiles + tileLine + tileAdr));
-                Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(tiles + tileLine + tileAdr + 1));
+                UInt16 tile = Program.emulator.GetMemory().ReadFromMemory((UInt16)(map + tileRow + (xPos >> 3)));
 
-                UInt16 position = (UInt16)(line * 160 + x);
+                UInt16 tileAdr = (UInt16)(tile << 4);
+                Byte tileLine = (Byte)((yPos % 8) << 1);
+
+                Byte hi = Program.emulator.GetMemory().ReadFromMemory((UInt16)(tiles + tileLine + tileAdr));
+                Byte lo = Program.emulator.GetMemory().ReadFromMemory((UInt16)(tiles + tileLine + tileAdr + 1));
+
+                // OpenGL starts rendering from bottom left corner that is why we need to substract 160
+                UInt16 position = (UInt16)(((GB_HEIGHT * GB_WIDTH) - 160) - (line * GB_WIDTH) + xPos);
 
                 Byte palette = Program.emulator.GetMemory().ReadFromMemory(0xFF47);
-                Byte color = (Byte)((palette >> (pixel * 2)) & 0x03);
 
-                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "Position " + position + " Color: " + color);
-                Byte value = 0;
+                Byte currentBit = (Byte)(7 - (xPos % 8));
 
+                Byte hiBool = (Byte)((hi & (0x01 << currentBit)) == 0 ? 0 : 2);
+                Byte liBool = (Byte)((lo & (0x01 << currentBit)) == 0 ? 0 : 1);
+
+                var color = hiBool | liBool;
+
+                // TODO: Create Custom Color Palettes!
+
+                Byte value = (Byte)(color);
+                
                 switch (color)
                 {
                     case 0:
-                        value = 240;
+                        value = 220;
                         break;
                     case 1:
-                        value = 33;
-                        break;
-                    case 2:
                         value = 66;
                         break;
+                    case 2:
+                        value = 33;
+                        break;
                     case 3:
-                        value = 99;
+                        value = 0;
                         break;
                 }
 
+                // Switch to match OGL 8888 rgba standard
                 UInt32 valFin = (UInt32)(value << 24 | value << 16 | value << 8) + 0xFF;
 
                 Program.emulator.getRenderer().ScreenBuffer[position] = valFin;
             }
-
         }
 
         private void RenderSprites(Byte line)
