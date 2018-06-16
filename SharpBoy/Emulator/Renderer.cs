@@ -7,22 +7,14 @@ using OpenTK.Graphics.OpenGL;
 
 namespace SharpBoy
 {
-    
-
-    /* Tile is stored as i.e 00 CC
-       00 - is 0000 0000
-       we use 2-bits per pixel (only 4 posible values)
-    */
-
     // README: Renderer class is supposed only to made post-effects and send data to screen, all stuff about reading frame etc is in DMA (LCD) Controller class
     class Renderer
     {
 
-        public UInt32[] ScreenBuffer = new UInt32[256 * 256];
+        public UInt32[] ScreenBuffer = new UInt32[144 * 160];
 
         // Default Gameboy have only this "colors" defined in byte at address: 0xFF47 
         // There are 4 color combinations stored each for 2 bits
-
 
         // When Vblank iRQ occurs, redraw frame (AFAIK)
 
@@ -57,43 +49,22 @@ namespace SharpBoy
 
         public void PrepareFrame()
         {
-            //for(Byte  i = 0; i < 256 *)
+            //GL.Bitmap()
 
-            // Thanks to: http://gameboy.mongenel.com/dmg/asmmemmap.html
-
-            /*
-            $9800-$9BFF - BG Map Data 1
-            This 1024-byte long area is what the video processor uses to build the display. 
-            Each byte in this space represnts an 8x8 pixel space on the display. 
-            This area is 32x32 tiles large... EG: 1024 bytes. 
-            The display processor takes each byte and then goes into the Character RAM area and gets the corresponding tile from that area and draws it to the screen. 
-            So, if the first byte in the Map area contained $40, the display processor would get tile $40 from the Character RAM and put it in the top-left corner of the virtual screen. 
-            */
-
-            /*
-             * OAM is sprite RAM. This area is 40 sprites X 4 bytes long. 
-             * When you with to display an object (sprite) you write 4 corresponding bytes to OAM. These 4 bytes are:
-                Byte 1: X Location
-                Byte 2: Y Location
-                Tile Number (0-255)
-                Attributes
-                The tile number is taken from the Character RAM, just as BG tiles are. 
-                The X and Y locations are slightly offset (8 pixels and 16 pixels), so you can have sprites partially off of the left and top of the LCD. 
-                So if you set the location to 0,0 then the sprite would be off of the screen. 
-                To set a sprite to the top-left corner, you'd set it's location to 8,16
-            */
+            // TODO: Prepare Data as Bitmap to render
 
         }
         public void Render()
         {
             // Send data to window?
+
+            // Create Bitmap
+            PrepareFrame();
             Program.mainWindow.openGLControl.Refresh(); // FORCES REPAINT
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "RENDER");
-        }
 
-        public void Update()
-        {
-
+            // Clear BUffer
+            //for (int i = 0; i < ScreenBuffer.Length; i++)
+            //    ScreenBuffer[i] = 0;
         }
     }
 }

@@ -200,7 +200,9 @@ namespace SharpBoy
                 cycles = 0;
 
             // TODO: Not perfectly correct :/
-            if (cycles % 114 == 0)
+
+            // INFO: Useful for Frameskipping implementation
+            if (cycles % (114*3) == 0)
                 SetLY((Byte)(GetLY() + 1));
 
             if (cycles < 1140)

@@ -43,15 +43,21 @@ namespace SharpBoy
 
         public Task cpuTask;
 
-        private InterruptController irController = new InterruptController();
-        private InternalTimer internalTimer = new InternalTimer();
-        private DMAController dmaController = new DMAController();
-        private VideoController videoController = new VideoController();
+        private InterruptController irController;
+        private InternalTimer internalTimer;
+        private DMAController dmaController;
+        private VideoController videoController;
 
         public InterruptController GetInterruptController() { return irController; }
         public DMAController GetDMAController() { return dmaController; }
 
-        public CPU() { }
+        public CPU()
+        {
+            irController = new InterruptController();
+            internalTimer = new InternalTimer();
+            dmaController = new DMAController();
+            videoController = new VideoController();
+        }
 
         // For Special Use only
         public Byte last_ie_reg_val = 0x00;
@@ -162,7 +168,9 @@ namespace SharpBoy
 
         public void StackPush(SixteenBitRegister register)
         {
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "PUSH [" + String.Format("{0:X4}", reg_sp) + "]: " + register.GetUpperByte());
             Program.emulator.GetMemory().WriteToMemory(--reg_sp, register.GetUpperByte());
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "PUSH [" + String.Format("{0:X4}", reg_sp) + "]: " + register.GetLowerByte());
             Program.emulator.GetMemory().WriteToMemory(--reg_sp, register.GetLowerByte());
         }
 
@@ -171,8 +179,12 @@ namespace SharpBoy
             Byte lo = (Byte)(value & 0xFF);
             Byte hi = (Byte)((value >> 8) & 0xFF);
 
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "PUSHV [" + String.Format("{0:X4}", reg_sp) + "]: " + String.Format("{0:X2}", hi));
             Program.emulator.GetMemory().WriteToMemory(--reg_sp, hi);
+           // Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "PUSHV [" + String.Format("{0:X4}", reg_sp) + "]: " + String.Format("{0:X2}", lo));
             Program.emulator.GetMemory().WriteToMemory(--reg_sp, lo);
+
+
         }
 
         public void StackPop(ref SixteenBitRegister register)
@@ -213,11 +225,12 @@ namespace SharpBoy
                 // Increase Program Counter to next location
                 set_reg_pc((UInt16)(get_reg_pc() + 1));
                 OpcodesCB.ExecuteOpcodeCB((OpcodesCB.OpcodeCB)(Program.emulator.GetMemory().ReadFromMemory(reg_pc)));
-                // TODO: IMplement Clocks for CB Opcodes
+                // TODO: Implement Clocks for CB Opcodes
                 return opTime;
             }
 
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "[" + String.Format("{0:X4}", get_reg_pc()) + "]: " + op.ToString() + " Executing");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "[" + String.Format("{0:X4}", get_reg_pc()) + "]: " + op.ToString() + " Executing");
+
             Opcodes.ExecuteOpcode(op);
             opTime = Opcodes.opcodeTimings.ContainsKey(op) ? Opcodes.opcodeTimings[op] : (byte)1;
 
@@ -259,6 +272,7 @@ namespace SharpBoy
             videoController.Update(ticks);
             dmaController.Tick();
             internalTimer.Update();
+            Program.GetEmulator().joypad.Update();
         }
 
         public bool BreakpointOccurred()
@@ -280,8 +294,8 @@ namespace SharpBoy
             {
                 do
                 {
-                    //if (BreakpointOccurred())
-                    //    continue;
+                    if (BreakpointOccurred())
+                        continue;
 
                     ExeCycle();
 

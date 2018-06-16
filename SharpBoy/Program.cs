@@ -10,6 +10,7 @@ namespace SharpBoy
 {
     static class Program
     {
+
         public static Emulator emulator = new Emulator();
         public static LoggerWindow loggerW;
         public static MainWindow mainWindow;
@@ -27,5 +28,7 @@ namespace SharpBoy
 
             Application.Run(mainWindow = new MainWindow());
         }
+
+        public static ref Emulator GetEmulator() { return ref emulator; }
     }
 }

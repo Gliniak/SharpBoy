@@ -16,8 +16,8 @@ namespace SharpBoy
 
         private CPU cpu = new CPU();
         private Renderer renderer = new Renderer();
-
         private Cartridge cart = new Cartridge();
+        public JoypadController joypad = new JoypadController();
 
         public Emulator()
         {
@@ -26,7 +26,6 @@ namespace SharpBoy
             
         public bool Initialize()
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "Initializing...");
             memory.InitializeMemory();
 
             return true;
@@ -34,9 +33,7 @@ namespace SharpBoy
 
         public void Start()
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STARTING");
             isRunning = true;
-
             cpu.Start(); 
         }
 
@@ -54,7 +51,6 @@ namespace SharpBoy
 
         public void Stop()
         {
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "EMULATOR STOPPED");
             isRunning = false;
         }
 

@@ -37,7 +37,7 @@ namespace SharpBoy
 
         public void Update()
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "InternalTimer: Update()");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "InternalTimer: Update()");
         }
     }
 }

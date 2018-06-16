@@ -60,10 +60,10 @@ namespace SharpBoy
             lv_dissassembly.Columns.Add("Opcode", 70);
             lv_dissassembly.Columns.Add("Instruction", 200);
 
-            Byte lo_val = (i_address < 0x00FF) ? (Byte)(i_address) : (Byte)(0xFF);
-            Byte hi_val = (i_address + 0x00FF > 0xFFFF) ? (Byte)(0xFFFF - i_address) : (Byte)(0xFF);
+            UInt16 lo_val = (i_address < 0x00FF) ? (UInt16)(0) : (UInt16)(i_address - 0xFF);
+            UInt16 hi_val = ((UInt32)(i_address + 0x00FF) > 0xFFFF) ? (UInt16)(0xFFFF) : (UInt16)(i_address + 0xFF);
 
-            for (UInt16 i = Convert.ToUInt16(lo_val); i < Convert.ToUInt16(hi_val);)
+            for (UInt16 i = lo_val; i < hi_val;)
             {
                 Byte opcode = Program.emulator.GetMemory().ReadFromMemory(i);
                 String address = String.Format("{0:X4}", i);

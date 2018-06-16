@@ -42,28 +42,27 @@ namespace SharpBoy
 
         // It is better to create another class for this?
         // I need to have access to GL from inside the Emulator not GUI code
-        /*
+        
         private void OpenGLKeyPressed(object sender, KeyEventArgs args)
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "OPEN GL KEY");
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "OPEN GL KEY: " + args.KeyValue);
+
+            Program.GetEmulator().joypad.Update();
         }
 
-        */
+        
+
         private void OpenGLPaint(object sender, PaintEventArgs args)
         {
             if (!Program.emulator.isRunning || !Program.emulator.getRenderer().isDisplayOn)
                 return;
 
             DrawFrame();
-            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "OPEN GL PAINT");
         }
         
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Program.emulator.Stop();
-            // TODO: Clear Everything Before Exiting!
-
-            // Do we need to do this?
             Program.loggerW.Invoke(new Action(delegate ()
             {
                 Program.loggerW.Close();
@@ -97,6 +96,9 @@ namespace SharpBoy
 
             Program.emulator.LoadCartridge(opener.FileName);
 
+            // SOME CONDITION HERE
+            Program.emulator.GetCartridge().LoadCartridgeBaseData();
+
             Text = Program.emulator.GetCartridge().GetGameTitle();
             Program.emulator.Start();
         }
@@ -123,14 +125,8 @@ namespace SharpBoy
             Program.emulator.Start();
         }
 
-        private void MainWindow_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void MainWindow_Resize(object sender, EventArgs e)
-        {
-        }
+        private void MainWindow_Load(object sender, EventArgs e) { }
+        private void MainWindow_Resize(object sender, EventArgs e) { }
 
         private void memoryViewerToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -142,6 +138,13 @@ namespace SharpBoy
         {
             Program.emulator.Reset(true);
             Program.emulator.Start();
+        }
+
+        private void openwbToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.FileOk += new CancelEventHandler(openFileDialog_FileOpening);
+            dialog.ShowDialog();
         }
     }
 }

@@ -40,7 +40,8 @@ namespace SharpBoy
             WriteToMemory(0xFF48, 0xFF);
             WriteToMemory(0xFF49, 0xFF);
             
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "INITIALIZE MEMORY TO VALUE: 0x00");
+
+            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "INITIALIZED MEMORY TO VALUE: 0x00");
             return;
         }
 
@@ -48,18 +49,34 @@ namespace SharpBoy
         {
             BaseMemory[Address] = Value;
 
-            if(Address == 0xFF46)
+            // TODO: Event Based Actions
+            if(Address == 0xFF50)
             {
+                Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "TURNING OFF DMG BIOS");
+
+                // Need to clear BIOS memory and allow game to write to it
+                // However there should be some data!
+                for (UInt16 adr = 0x00; adr < 0xFF; adr++)
+                    WriteToMemory((UInt16)(0x0000 + adr), 0);
+
+                Program.emulator.GetCartridge().LoadCartridgeBaseData();
+            }
+
+            if (Address == 0xFF85)
+            {
+                BaseMemory[Address] = 1;
+                //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, String.Format("[{0:X4}]", Address) + "Writing: " + Value);
+            }
+            //if(Address == 0xCFFB || Address == 0xCFFA || Address == 0xCFF9 || Address == 0xCFF8)
+            //    Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, String.Format("[{0:X4}]", Address) + "Writing: " + Value);
+
+            if (Address == 0xFF46)
                 Program.emulator.getCPU().GetDMAController().StartOAM(Value);
-            }
-            /*
-            switch(Address)
+
+            if(Address >= 0x9800 && Address < 0x9830)
             {
-                case 0xFF46: //DMA Transfer
-
+                //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_ERROR, "Writing Value: " + Value + " To Address: " + Address);
             }
-            */
-
         }
 
         public void WriteToMemory(UInt16 Address, Byte[] Values, UInt16 count)
@@ -76,6 +93,7 @@ namespace SharpBoy
         public Byte[] ReadFromMemory(UInt16 Address, UInt16 length)
         {
             Byte[] data = new Byte[length];
+
             for (int i = 0; i < length; i++)
                 data[i] = ReadFromMemory(Convert.ToUInt16(Address + i));
 

@@ -9,6 +9,8 @@ namespace SharpBoy
 {
     class Cartridge
     {
+        public String rom_path;
+
         enum cartridgeAddress : UInt16
         {
             CARTRIDGE_ADDRESS_BEGIN = 0x0100,
@@ -80,6 +82,7 @@ namespace SharpBoy
             file.Read(header, 0, (UInt16)cartridgeAddress.CARTRIDGE_HEADER_SIZE);
 
             Program.emulator.GetMemory().WriteToMemory((UInt16)cartridgeAddress.CARTRIDGE_ADDRESS_BEGIN, header, (UInt16)header.Length);
+
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "Loaded Data Header: \n" + BitConverter.ToString(header).Replace("-", " "));
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "GAME NAME: " + GetGameTitle() + Environment.NewLine);
             Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_INFO, "CARTRIDGE TYPE: " + GetCartridgeType());
@@ -91,6 +94,19 @@ namespace SharpBoy
             file.Seek(0x0147, SeekOrigin.Begin);
             file.Read(data, 0, 0x7FFF - (UInt16)cartridgeAddress.CARTRIDGE_HEADER_SIZE);
             Program.emulator.GetMemory().WriteToMemory(0x0147, data, (UInt16)data.Length);
+
+            rom_path = path;
+        }
+
+        public void LoadCartridgeBaseData()
+        {
+            byte[] header = new byte[0xFF];
+            FileStream file = File.OpenRead(rom_path);
+
+            file.Seek(0x0000, SeekOrigin.Begin);
+            file.Read(header, 0, 0xFF);
+
+            Program.emulator.GetMemory().WriteToMemory(0x0000, header, (UInt16)header.Length);
         }
     }
 }

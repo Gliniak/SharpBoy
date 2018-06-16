@@ -15,6 +15,14 @@ namespace SharpBoy
         {
             OPCODE_CB_SWAP_A = 0x37,
             OPCODE_CB_BIT_7_H = 0x7C,
+            OPCODE_CB_RES_B_A = 0x87,
+            OPCODE_CB_RES_2B_B = 0x50,
+            OPCODE_CB_RES_3B_B = 0x58,
+            OPCODE_CB_RES_4B_B = 0x60,
+            OPCODE_CB_RES_5B_B = 0x68,
+
+            OPCODE_SLA_A = 0x27,
+
             OPCODE_CB_RL_C_CF = 0x11, // Rotate left register C through carry flag
 
         }
@@ -23,8 +31,93 @@ namespace SharpBoy
         {
             { OpcodeCB.OPCODE_CB_SWAP_A, () => cb_swap_a_ins() },
             { OpcodeCB.OPCODE_CB_BIT_7_H, () => cb_bit_7_h_ins() },
+            { OpcodeCB.OPCODE_CB_RES_B_A, () => cb_res_bit_a() },
+
+            { OpcodeCB.OPCODE_CB_RES_2B_B, () => cb_res_bit2_b() },
+            { OpcodeCB.OPCODE_CB_RES_3B_B, () => cb_res_bit3_b() },
+            { OpcodeCB.OPCODE_CB_RES_4B_B, () => cb_res_bit4_b() },
+            { OpcodeCB.OPCODE_CB_RES_5B_B, () => cb_res_bit5_b() },
+
+            { OpcodeCB.OPCODE_SLA_A, () => cb_sla_a_ins() },
+
             { OpcodeCB.OPCODE_CB_RL_C_CF, () => cb_rl_c_cf_ins() }
         };
+
+        public static void cb_sla_a_ins()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = cpu.get_reg_a();
+
+            cpu.ResetFlags();
+
+            if ((value & 0x80) != 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_CARRY, true);
+
+            value <<= 1;
+
+            if(value == 0)
+                cpu.SetFlagBit(CPU.Flag_Register_Bits.FLAG_REGISTER_ZERO, true);
+
+            cpu.set_reg_a(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void cb_res_bit5_b()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = cpu.get_reg_b();
+            value &= (Byte)(255 - 16);
+            cpu.set_reg_b(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void cb_res_bit4_b()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = cpu.get_reg_b();
+            value &= (Byte)(255 - 8);
+            cpu.set_reg_b(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void cb_res_bit3_b()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = cpu.get_reg_b();
+            value &= (Byte)(255 - 4);
+            cpu.set_reg_b(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void cb_res_bit2_b()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = cpu.get_reg_b();
+            value &= (Byte)(255 - 2);
+            cpu.set_reg_b(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
+
+        public static void cb_res_bit_a()
+        {
+            UInt16 address = cpu.get_reg_pc();
+
+            Byte value = cpu.get_reg_a();
+            value &= (Byte)(255 - 1);
+            cpu.set_reg_a(value);
+
+            cpu.set_reg_pc((UInt16)(address + 1));
+        }
 
         public static void cb_rl_c_cf_ins()
         {
@@ -115,6 +208,10 @@ namespace SharpBoy
                     address += 1;
                     break;
 
+                case OpcodeCB.OPCODE_CB_RES_B_A:
+                    str_op = "[CB] RES A, 0";
+                    address += 1;
+                    break;
                 default:
                     str_op = "[CB] UNKNOWN";
                     address += 1;

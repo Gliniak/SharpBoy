@@ -27,13 +27,13 @@ namespace SharpBoy
 
         public Interrupt Update()
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "InterruptController: Update()");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_DEBUG, "InterruptController: Update()");
             return Interrupt.INTERRUPT_NONE;
         }
 
         public void RaiseInterrupt(Interrupt interrupt)
         {
-            Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "InterruptController: RaiseInterrupt(" + interrupt.ToString() + ")");
+            //Logger.AppendLog(Logger.LOG_LEVEL.LOG_LEVEL_WARNING, "InterruptController: RaiseInterrupt(" + interrupt.ToString() + ")");
 
             switch(interrupt)
             {
